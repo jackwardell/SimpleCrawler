@@ -10,7 +10,7 @@ HTML_RELATIVE_A_TAG = "<html><body><a href='/example.html'>hello world</a></body
 HTML_GET_ARGS_A_TAG = (
     "<html><body><a href='/example.html?hello=world'>hello world</a></body></html>"
 )
-
+HTML_FRAGMENT_A_TAG = "<html><body><a href='#hello'>hello world</a></body></html>"
 
 HTML_SNIPPETS_AND_RESULT = [
     (HTML_NO_A_TAGS, set()),
@@ -19,6 +19,7 @@ HTML_SNIPPETS_AND_RESULT = [
     (HTML_ABSOLUTE_A_TAG, {"https://example.com"}),
     (HTML_RELATIVE_A_TAG, {"/example.html"}),
     (HTML_GET_ARGS_A_TAG, {"/example.html?hello=world"}),
+    (HTML_FRAGMENT_A_TAG, {"#hello"}),
 ]
 
 
