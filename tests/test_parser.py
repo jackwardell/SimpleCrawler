@@ -19,8 +19,15 @@ ABSOLUTE_LINK = ["https://example.com"]
 RELATIVE_LINK = ["/example.html"]
 GET_ARGS_LINK = ["/example?hello=world&world=hello"]
 FRAGMENT_LINK = ["#hello"]
+MULTIPLE_LINKS = ABSOLUTE_LINK + RELATIVE_LINK + GET_ARGS_LINK + FRAGMENT_LINK
 
-LINK_EXAMPLES = [ABSOLUTE_LINK, RELATIVE_LINK, GET_ARGS_LINK, FRAGMENT_LINK]
+LINK_EXAMPLES = [
+    ABSOLUTE_LINK,
+    RELATIVE_LINK,
+    GET_ARGS_LINK,
+    FRAGMENT_LINK,
+    MULTIPLE_LINKS,
+]
 
 HTML_SNIPPETS_AND_RESULT = [
     (make_html(make_a_tags(example)), set(example)) for example in LINK_EXAMPLES
