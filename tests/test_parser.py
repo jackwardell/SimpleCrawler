@@ -1,6 +1,6 @@
 import pytest
 
-from crawler.parser import get_links_from_html
+from crawler.parser import get_unique_links_from_html
 
 
 def make_html(body: str) -> str:
@@ -8,7 +8,7 @@ def make_html(body: str) -> str:
 
 
 def make_a_tag(path: str) -> str:
-    return f'<a href="{path}">{path}</a>'
+    return f'<a href="{path}">another link</a>'
 
 
 def make_a_tags(paths: list) -> str:
@@ -37,4 +37,4 @@ HTML_SNIPPETS_AND_RESULT = [
 @pytest.mark.parametrize("html_and_result", HTML_SNIPPETS_AND_RESULT)
 def test_parser(html_and_result):
     html, result = html_and_result
-    assert get_links_from_html(html) == result
+    assert get_unique_links_from_html(html) == result
