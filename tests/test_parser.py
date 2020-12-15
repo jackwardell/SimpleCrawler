@@ -33,6 +33,9 @@ OTHER_REL_LINK_3 = ["www.example.html"]
 OTHER_REL_LINK_4 = ["../example.html"]
 OTHER_REL_LINK_5 = ["/some-folder/example.html"]
 
+OTHER_ABS_LINK_1 = ["mailto:hello@world.com"]
+OTHER_ABS_LINK_2 = ["http://www.example.html"]
+
 # all examples for pytest.mark.parameterize
 LINK_EXAMPLES = [
     ABSOLUTE_LINK,
@@ -46,6 +49,8 @@ LINK_EXAMPLES = [
     OTHER_REL_LINK_3,
     OTHER_REL_LINK_4,
     OTHER_REL_LINK_5,
+    OTHER_ABS_LINK_1,
+    OTHER_ABS_LINK_2,
 ]
 
 # make tuples of html and expected links to be found via parser
