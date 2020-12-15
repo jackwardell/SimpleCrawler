@@ -27,6 +27,12 @@ FRAGMENT_LINK = ["#hello"]
 MULTIPLE_LINKS = ABSOLUTE_LINK + RELATIVE_LINK + GET_ARGS_LINK + FRAGMENT_LINK
 DUPLICATE_LINKS = ["https://example.com", "https://example.com"]
 
+OTHER_REL_LINK_1 = ["example.html"]
+OTHER_REL_LINK_2 = [".example.html"]
+OTHER_REL_LINK_3 = ["www.example.html"]
+OTHER_REL_LINK_4 = ["../example.html"]
+OTHER_REL_LINK_5 = ["/some-folder/example.html"]
+
 # all examples for pytest.mark.parameterize
 LINK_EXAMPLES = [
     ABSOLUTE_LINK,
@@ -35,6 +41,11 @@ LINK_EXAMPLES = [
     FRAGMENT_LINK,
     MULTIPLE_LINKS,
     DUPLICATE_LINKS,
+    OTHER_REL_LINK_1,
+    OTHER_REL_LINK_2,
+    OTHER_REL_LINK_3,
+    OTHER_REL_LINK_4,
+    OTHER_REL_LINK_5,
 ]
 
 # make tuples of html and expected links to be found via parser
