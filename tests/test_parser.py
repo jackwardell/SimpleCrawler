@@ -1,7 +1,6 @@
 import pytest
 
 from crawler.parser import AnchorTagParser
-from crawler.parser import get_unique_links_from_html
 from crawler.parser import HyperlinkReference
 
 
@@ -18,49 +17,6 @@ def make_a_tag(path: str) -> str:
 def make_a_tags(paths: list) -> str:
     """make multiple <a> tags (via `make_a_tag`) seperated by <br> tags"""
     return "<br>".join([make_a_tag(path) for path in paths])
-
-
-# make tuples of html and expected links to be found via parser
-# e.g. ('<html><body><a href="/some-link">some link</a></body></html>', ["/some-link"])
-HTML_SNIPPETS_AND_RESULT = [
-    (make_html(make_a_tags(example)), example)
-    for example in [
-        ["https://example.com"],
-        ["http://example.com"],
-        ["mailto://example.com"],
-        ["//example.com"],
-        ["/"],
-        ["."],
-        ["example"],
-        ["example.html"],
-        ["www.example.html"],
-        ["../example.html"],
-        ["#hello"],
-        ["?hello=world"],
-        [".git"],
-        ["/example"],
-        ["/example.html"],
-        ["/example#hello"],
-        ["?hello=world"],
-        ["/example?hello=world&world=hello"],
-        ["https://example.com", "https://example.com"],
-        ["/example.html", "/example.html"],
-    ]
-]
-
-
-@pytest.mark.parametrize("html_and_expected_links_to_be_found", HTML_SNIPPETS_AND_RESULT)
-def test_anchor_tag_parser(html_and_expected_links_to_be_found):
-    html, expected_links_to_be_found = html_and_expected_links_to_be_found
-    parser = AnchorTagParser()
-    parser.feed(html)
-    assert parser.found_links == expected_links_to_be_found
-
-
-@pytest.mark.parametrize("html_and_expected_links_to_be_found", HTML_SNIPPETS_AND_RESULT)
-def test_get_unique_links_from_html(html_and_expected_links_to_be_found):
-    html, expected_links_to_be_found = html_and_expected_links_to_be_found
-    assert get_unique_links_from_html(html) == set(expected_links_to_be_found)
 
 
 @pytest.mark.parametrize(
@@ -177,3 +133,96 @@ def test_hyper_link_join_with_absolute_links(input_link_and_output_result):
     href = HyperlinkReference(input_link)
     domain = "https://helloworld.com"
     assert href.join(domain) == output_result
+
+
+@pytest.mark.parametrize(
+    "link",
+    [
+        "https://example.com",
+        "http://example.com",
+        "mailto://example.com",
+        "//example.com",
+        "/",
+        ".",
+        "example",
+        "example.html",
+        "www.example.html",
+        "../example.html",
+        "#hello",
+        "?hello=world",
+        ".git",
+        "/example",
+        "/example.html",
+        "/example#hello",
+        "?hello=world",
+        "/example?hello=world&world=hello",
+    ],
+)
+def test_anchor_tag_parser_single_link(link):
+    html, href = make_html(make_a_tag(link)), HyperlinkReference(link)
+    parser = AnchorTagParser()
+    parser.feed(html)
+    assert parser.found_links == [href]
+
+
+@pytest.mark.parametrize(
+    "links",
+    [
+        ["https://example.com", "http://example.com"],
+        ["http://example.com", "mailto://example.com", "//example.com"],
+        ["/", ".", "example", "example.html"],
+        ["www.example.html", "../example.html", "#hello", "?hello=world", ".git"],
+        [
+            "https://example.com",
+            "/example",
+            "/example.html",
+            "/example#hello",
+            "?hello=world",
+            "/example?hello=world&world=hello",
+        ],
+    ],
+)
+def test_anchor_tag_parser_multiple_links_no_duplicates(links):
+    html, hrefs = (
+        make_html(make_a_tags(links)),
+        [HyperlinkReference(link) for link in links],
+    )
+    parser = AnchorTagParser()
+    parser.feed(html)
+    assert parser.found_links == hrefs
+
+
+@pytest.mark.parametrize(
+    "links",
+    [
+        [
+            "https://example.com",
+            "http://example.com",
+            "/example",
+            "?hello=world",
+            "/example?hello=world&world=hello",
+        ],
+        [
+            "/hello-world",
+            "http://example.com",
+            "mailto://example.com",
+            "//example.com",
+            "/hello-world",
+        ],
+        [
+            "https://example.com",
+            "https://example.com",
+            "#hello",
+            "#hello",
+            "?hello=world",
+        ],
+    ],
+)
+def test_anchor_tag_parser_multiple_links_with_duplicates(links):
+    html, hrefs = (
+        make_html(make_a_tags(links)),
+        [HyperlinkReference(link) for link in links],
+    )
+    parser = AnchorTagParser()
+    parser.feed(html)
+    assert parser.found_links == hrefs

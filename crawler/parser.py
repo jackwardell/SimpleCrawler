@@ -1,6 +1,5 @@
 import urllib.parse
 from html.parser import HTMLParser
-from typing import Set
 
 
 class HyperlinkReference:
@@ -80,23 +79,10 @@ class AnchorTagParser(HTMLParser):
             for attr, value in attrs:
                 # grab only hrefs
                 if attr == "href":
-                    self.found_links.append(value)
+                    href = HyperlinkReference(value)
+                    self.found_links.append(href)
 
     def error(self, message: str) -> None:
         # ignore errors for now
         # assumption is that all production websites will have working (and therefore parsable) HTML
         pass
-
-
-def get_unique_links_from_html(html: str) -> Set[str]:
-    """
-    * This function will find all <a> tags in a HTML snippet
-    * It will grab all href attributes in the <a> tags
-    * It will return a list of values assigned to href attribute
-
-    :param html: (str) a html snippet
-    :return: (set) a set of links found in all href attributes
-    """
-    parser = AnchorTagParser()
-    parser.feed(html)
-    return set(parser.found_links)
