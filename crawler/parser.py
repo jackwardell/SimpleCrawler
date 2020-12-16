@@ -17,7 +17,7 @@ class HyperlinkReference:
 
         self.scheme = scheme.lower()
         self.netloc = netloc.lower().removesuffix(".")
-        self.path = urllib.parse.quote(path, "/%") or "/"
+        self.path = "/" + urllib.parse.quote(path, "/%").removeprefix("/")
         self.query = urllib.parse.quote_plus(query, ":&=")
         self.fragment = fragment
 

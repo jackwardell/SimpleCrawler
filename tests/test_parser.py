@@ -49,7 +49,7 @@ def make_a_tags(paths: list) -> str:
         ),
     ],
 )
-def test_hyper_link_reference(input_link_and_output_result):
+def test_hyperlink_reference(input_link_and_output_result):
     input_link, output_result = input_link_and_output_result
     href = HyperlinkReference(input_link)
     assert href == output_result
@@ -79,7 +79,7 @@ def test_hyper_link_reference(input_link_and_output_result):
         ("https://www.example.com/?hello=world", True),
     ],
 )
-def test_hyper_link_is_absolute_or_relative(input_link_and_output_result):
+def test_hyperlink_is_absolute_or_relative(input_link_and_output_result):
     input_link, output_result = input_link_and_output_result
     href = HyperlinkReference(input_link)
     assert href.is_absolute is output_result
@@ -102,7 +102,7 @@ def test_hyper_link_is_absolute_or_relative(input_link_and_output_result):
         ("/?hello=world", "/?hello=world"),
     ],
 )
-def test_hyper_link_join_with_relative_links(input_link_and_output_result):
+def test_hyperlink_join_with_relative_links(input_link_and_output_result):
     input_link, output_result = input_link_and_output_result
     href = HyperlinkReference(input_link)
     domain = "https://helloworld.com"
@@ -128,11 +128,34 @@ def test_hyper_link_join_with_relative_links(input_link_and_output_result):
         ),
     ],
 )
-def test_hyper_link_join_with_absolute_links(input_link_and_output_result):
+def test_hyperlink_join_with_absolute_links(input_link_and_output_result):
     input_link, output_result = input_link_and_output_result
     href = HyperlinkReference(input_link)
     domain = "https://helloworld.com"
     assert href.join(domain) == output_result
+
+
+@pytest.mark.parametrize(
+    "input_link_and_output_result",
+    [
+        ("/ hello world", "/%20hello%20world"),
+        ("/example!@£$%^&*()", "/example%21%40%C2%A3%24%%5E%26%2A%28%29"),
+        ("www.EXAMPLE.html", "/www.EXAMPLE.html"),
+        ("#hello", "/#hello"),
+        ("/#hello", "/#hello"),
+        ("HTTPS://WWW.eXaMpLe.cOm/", "https://www.example.com/"),
+        ("?hello=world+hello+world", "/?hello=world%2Bhello%2Bworld"),
+        (
+            "/hello-world?hello=world+hello+world",
+            "/hello-world?hello=world%2Bhello%2Bworld",
+        ),
+        ("/?hello=world&world=hello", "/?hello=world&world=hello"),
+    ],
+)
+def test_hyperlink_normalisation(input_link_and_output_result):
+    input_link, output_result = input_link_and_output_result
+    href = HyperlinkReference(input_link)
+    assert href == output_result
 
 
 @pytest.mark.parametrize(
