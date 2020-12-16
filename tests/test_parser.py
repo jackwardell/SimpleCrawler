@@ -284,6 +284,7 @@ def test_get_hrefs_from_html_not_unique(links):
         [HyperlinkReference(link) for link in links],
     )
     assert get_hrefs_from_html(html) == hrefs
+    assert get_hrefs_from_html(html, unique=False) == hrefs
 
 
 @pytest.mark.parametrize(

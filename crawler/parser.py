@@ -97,6 +97,7 @@ def get_hrefs_from_html(html: str, unique: bool = False) -> List[HyperlinkRefere
     * It will return a list of HyperlinkReference's
 
     :param html: (str) a html snippet
+    :param unique: (bool) whether the retuning list should include duplicate hrefs
     :return: (list) a list of links found in all href attributes
     """
     parser = AnchorTagParser()
@@ -104,5 +105,7 @@ def get_hrefs_from_html(html: str, unique: bool = False) -> List[HyperlinkRefere
     if unique is True:
         # quickest way to dedupe while retaining order
         return list(dict.fromkeys(parser.found_links))
-    else:
+    elif unique is False:
         return parser.found_links
+    else:
+        raise TypeError("unique must be True or False")
