@@ -1,5 +1,58 @@
+import urllib.parse
 from html.parser import HTMLParser
 from typing import Set
+
+
+class HyperlinkReference:
+    """
+    a representation of a Hyperlink REFerence (href)
+    """
+
+    def __init__(self, link: str):
+        if not isinstance(link, str):
+            raise TypeError("href links need to be strings")
+
+        # split is the core element we want to build class around
+        normalised_link = urllib.parse.urljoin("/", link)
+        scheme, netloc, path, query, fragment = urllib.parse.urlsplit(normalised_link)
+
+        self.scheme = scheme.lower()
+        self.netloc = netloc.lower().removesuffix(".")
+        self.path = urllib.parse.quote(path, "/%") or "/"
+        self.query = urllib.parse.quote_plus(query, ":&=")
+        self.fragment = fragment
+
+    def __str__(self):
+        components = (self.scheme, self.netloc, self.path, self.query, self.fragment)
+        return urllib.parse.urlunsplit(components)
+
+    def __repr__(self):
+        return f'href="{self}"'
+
+    def __eq__(self, other):
+        return str(self) == other
+
+    def __hash__(self):
+        return hash(repr(self))
+
+    @property
+    def is_absolute(self) -> bool:
+        """all links that start with a scheme (e.g. https) are absolute"""
+        return bool(self.scheme)
+
+    @property
+    def is_relative(self) -> bool:
+        """all links that don't start with a scheme (e.g. https) are relative"""
+        return not self.is_absolute
+
+    def join(self, host: str):
+        """
+        bind a href to a host if possible (e.g. /example -> https://www.example.com/example)
+        :param host: (str) an
+        :return:
+        """
+        resolution = urllib.parse.urljoin(host, str(self))
+        return HyperlinkReference(resolution)
 
 
 class AnchorTagParser(HTMLParser):
