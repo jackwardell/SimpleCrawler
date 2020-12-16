@@ -1,5 +1,6 @@
 import urllib.parse
 from html.parser import HTMLParser
+from typing import List
 
 
 class HyperlinkReference:
@@ -68,7 +69,7 @@ class AnchorTagParser(HTMLParser):
         super().__init__()
 
         # create set of links found
-        self.found_links = list()
+        self.found_links = []
 
     def handle_starttag(self, tag: str, attrs: list) -> None:
         # https://docs.python.org/3/library/html.parser.html#html.parser.HTMLParser.handle_starttag
@@ -86,3 +87,22 @@ class AnchorTagParser(HTMLParser):
         # ignore errors for now
         # assumption is that all production websites will have working (and therefore parsable) HTML
         pass
+
+
+def get_hrefs_from_html(html: str, unique: bool = False) -> List[HyperlinkReference]:
+    """
+    * This function will find all <a> tags in a HTML snippet (via `AnchorTagParser`)
+    * It will grab all href attributes in the <a> tags (as `HyperlinkReference`)
+    * If unique=True, it will remove duplicate HyperlinkReference (`via set() casting`)
+    * It will return a list of HyperlinkReference's
+
+    :param html: (str) a html snippet
+    :return: (list) a list of links found in all href attributes
+    """
+    parser = AnchorTagParser()
+    parser.feed(html)
+    if unique is True:
+        # quickest way to dedupe while retaining order
+        return list(dict.fromkeys(parser.found_links))
+    else:
+        return parser.found_links
