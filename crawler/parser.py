@@ -93,6 +93,9 @@ class HyperlinkReferenceCollection:
         # quickest way to dedupe while retaining order
         return HyperlinkReferenceCollection(list(dict.fromkeys(self.collection)))
 
+    def join_all(self, host: str):
+        return HyperlinkReferenceCollection([link.join(host) for link in self.collection])
+
 
 class AnchorTagParser(HTMLParser):
     """

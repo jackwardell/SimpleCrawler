@@ -383,3 +383,38 @@ def test_hyperlink_reference_collection_dedupe(input_and_output_links):
     input_links, output_links = input_and_output_links
     links = HyperlinkReferenceCollection(input_links)
     assert links.dedupe() == HyperlinkReferenceCollection(output_links)
+
+
+@pytest.mark.parametrize(
+    "input_and_output",
+    [
+        (["/", "/"], ["/", "/"]),
+        (["hello", "world"], ["/hello", "/world"]),
+        (["www.example.com"], ["/www.example.com"]),
+    ],
+)
+def test_hyperlink_reference_collection_relative_links_join_all(input_and_output):
+    input_links, output_links = input_and_output
+    links = HyperlinkReferenceCollection([HyperlinkReference(link) for link in input_links])
+    domain = "https://www.google.com"
+    assert links.join_all(domain).collection == [
+        HyperlinkReference(domain + link) for link in output_links
+    ]
+
+
+@pytest.mark.parametrize(
+    "input_and_output",
+    [
+        (["https://www.google.com/"], ["https://www.google.com/"]),
+        (
+            ["https://hello.world", "https://world.hello"],
+            ["https://hello.world", "https://world.hello"],
+        ),
+        (["http://www.example.com"], ["http://www.example.com"]),
+    ],
+)
+def test_hyperlink_reference_collection_absolute_links_join_all(input_and_output):
+    input_links, output_links = input_and_output
+    links = HyperlinkReferenceCollection([HyperlinkReference(link) for link in input_links])
+    domain = "https://www.google.com"
+    assert links.join_all(domain).collection == [HyperlinkReference(link) for link in output_links]
