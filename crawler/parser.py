@@ -101,7 +101,7 @@ class AnchorTagParser(HTMLParser):
         super().__init__()
 
         # create set of links found
-        self.found_links = []
+        self.found_links = HyperlinkReferenceCollection()
 
     def handle_starttag(self, tag: str, attrs: list) -> None:
         # https://docs.python.org/3/library/html.parser.html#html.parser.HTMLParser.handle_starttag
