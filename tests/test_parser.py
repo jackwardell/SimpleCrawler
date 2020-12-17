@@ -418,3 +418,91 @@ def test_hyperlink_reference_collection_absolute_links_join_all(input_and_output
     links = HyperlinkReferenceCollection([HyperlinkReference(link) for link in input_links])
     domain = "https://www.google.com"
     assert links.join_all(domain).collection == [HyperlinkReference(link) for link in output_links]
+
+
+@pytest.mark.parametrize(
+    "fields_and_input_links_and_output_links",
+    [
+        (
+            ("scheme", "http"),
+            [
+                "http://www.google.com/",
+                "/hello-world?hello=world",
+                "#hello",
+                "/?hello=world#hello",
+                "https://www.example.com",
+                "https://example.com/hello-world?world=hello",
+            ],
+            ["http://www.google.com/"],
+        ),
+        (
+            ("netloc", "www.example.com"),
+            [
+                "/",
+                "/hello-world?hello=world",
+                "#hello",
+                "/?hello=world#hello",
+                "https://www.example.com",
+                "https://www.example.com/hello-world?world=hello",
+            ],
+            [
+                "https://www.example.com",
+                "https://www.example.com/hello-world?world=hello",
+            ],
+        ),
+        (
+            ("path", "/hello-world"),
+            [
+                "/",
+                "/hello-world?hello=world",
+                "#hello",
+                "/?hello=world#hello",
+                "https://www.example.com",
+                "https://example.com/hello-world?world=hello",
+            ],
+            [
+                "/hello-world?hello=world",
+                "https://example.com/hello-world?world=hello",
+            ],
+        ),
+        (
+            ("query", "hello=world"),
+            [
+                "/",
+                "/hello-world?hello=world",
+                "#hello",
+                "/?hello=world#hello",
+                "https://www.example.com",
+                "https://example.com/?world=hello",
+            ],
+            [
+                "/hello-world?hello=world",
+                "/?hello=world#hello",
+            ],
+        ),
+        (
+            ("fragment", "hello"),
+            [
+                "/",
+                "/hello-world?hello=world",
+                "#goodbye",
+                "/?hello=world#hello",
+                "https://www.example.com",
+                "https://example.com/#hello",
+            ],
+            ["/?hello=world#hello", "https://example.com/#hello"],
+        ),
+    ],
+)
+def test_hyperlink_reference_collection_filter_by(
+    fields_and_input_links_and_output_links,
+):
+    fields, input_links, output_links = fields_and_input_links_and_output_links
+
+    input_hrefs = HyperlinkReferenceCollection([HyperlinkReference(link) for link in input_links])
+    k, v = fields
+    filtered_hrefs = input_hrefs.filter_by(**{k: v})
+
+    output_hrefs = HyperlinkReferenceCollection([HyperlinkReference(link) for link in output_links])
+
+    assert filtered_hrefs == output_hrefs

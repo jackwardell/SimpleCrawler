@@ -89,12 +89,37 @@ class HyperlinkReferenceCollection:
         return isinstance(other, self.__class__) and self.collection == other.collection
 
     def dedupe(self):
-        """remove all dupes and then create new instance of self"""
+        """
+        remove all dupes and then create new instance of self
+
+        :return: new instance of HyperlinkReferenceCollection that is deduped
+        """
         # quickest way to dedupe while retaining order
         return HyperlinkReferenceCollection(list(dict.fromkeys(self.collection)))
 
     def join_all(self, host: str):
+        """
+        apply join to all items in the collection and return a collection with those values
+
+        :param host: (str) host to apply join to on HyperlinkReference
+        :return: new instance of HyperlinkReferenceCollection that has entries all joined
+        """
         return HyperlinkReferenceCollection([link.join(host) for link in self.collection])
+
+    def filter_by(self, **kwargs):
+        """
+        apply filter_by to all items, filtering by: scheme, netloc, path, query, fragment
+
+        e.g. links.filter_by(scheme='https')
+
+        :param kwargs: any of: scheme, netloc, path, query, fragment = <some value>
+        :return: new instance of HyperlinkReferenceCollection that has entries filtered
+        """
+        results = []
+        for link in self.collection:
+            if all([getattr(link, k) == v for k, v in kwargs.items()]):
+                results.append(link)
+        return HyperlinkReferenceCollection(results)
 
 
 class AnchorTagParser(HTMLParser):
