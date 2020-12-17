@@ -369,3 +369,17 @@ def test_hyperlink_reference_collection_behaves_like_list():
     # check __iter__
     for index, link in enumerate(links):
         assert hrefs[index] == link
+
+
+@pytest.mark.parametrize(
+    "input_and_output_links",
+    [
+        (["/"], ["/"]),
+        (["/", "/"], ["/"]),
+        (["/hello", "/hello", "/hello", "/world"], ["/hello", "/world"]),
+    ],
+)
+def test_hyperlink_reference_collection_dedupe(input_and_output_links):
+    input_links, output_links = input_and_output_links
+    links = HyperlinkReferenceCollection(input_links)
+    assert links.dedupe() == HyperlinkReferenceCollection(output_links)
