@@ -8,6 +8,8 @@ class HyperlinkReference:
     a representation of a Hyperlink REFerence (href)
     """
 
+    __slots__ = ("scheme", "netloc", "path", "query", "fragment")
+
     def __init__(self, link: str):
         if not isinstance(link, str):
             raise TypeError("href links need to be strings")
@@ -55,6 +57,36 @@ class HyperlinkReference:
         return HyperlinkReference(resolution)
 
 
+class HyperlinkReferenceCollection:
+    """
+    a list for hyperlink references that allows for simple transformations
+    """
+
+    def __init__(self, collection: list = None):
+        self.collection = collection or []
+
+    def __len__(self):
+        return len(self.collection)
+
+    def __getitem__(self, item):
+        return self.collection[item]
+
+    def __iter__(self):
+        return iter(self.collection)
+
+    def __contains__(self, item):
+        return item in self.collection
+
+    def append(self, link):
+        self.collection.append(link)
+
+    def __str__(self):
+        return str(self.collection)
+
+    def __repr__(self):
+        return repr(self.collection)
+
+
 class AnchorTagParser(HTMLParser):
     """
     Simple HTML parser that will take in HTML and get all the HREF values (links) from <a> tags
@@ -92,9 +124,9 @@ class AnchorTagParser(HTMLParser):
 def get_hrefs_from_html(html: str, unique: bool = False) -> List[HyperlinkReference]:
     """
     * This function will find all <a> tags in a HTML snippet (via `AnchorTagParser`)
-    * It will grab all href attributes in the <a> tags (as `HyperlinkReference`)
+    * It will grab all href attributes in the <a> tags (as `HyperlinkReference` objects)
     * If unique=True, it will remove duplicate HyperlinkReference (`via dict.from_keys`)
-    * It will return a list of HyperlinkReference's
+    * It will return a list of HyperlinkReference objects
 
     :param html: (str) a html snippet
     :param unique: (bool) whether the retuning list should include duplicate hrefs

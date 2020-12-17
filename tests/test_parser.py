@@ -3,6 +3,7 @@ import pytest
 from crawler.parser import AnchorTagParser
 from crawler.parser import get_hrefs_from_html
 from crawler.parser import HyperlinkReference
+from crawler.parser import HyperlinkReferenceCollection
 
 
 def make_html(body: str) -> str:
@@ -337,3 +338,28 @@ def test_get_hrefs_from_html_unique(input_links_output_results):
     html = make_html(make_a_tags(input_links))
     hrefs = [HyperlinkReference(link) for link in output_results]
     assert get_hrefs_from_html(html, unique=True) == hrefs
+
+
+def test_hyperlink_reference_collection_behaves_like_list():
+    hrefs = [
+        HyperlinkReference("/hello"),
+        HyperlinkReference("/world"),
+        HyperlinkReference("/?hello=world"),
+    ]
+    # check __init__
+    links = HyperlinkReferenceCollection(hrefs)
+    # check __len__
+    assert len(links) == 3
+    # check append
+    links.append(HyperlinkReference("/?hello=world&world=hello"))
+    # check __len__ again
+    assert len(links) == 4
+    # check __getitem__
+    assert links[0] == HyperlinkReference("/hello")
+    assert links[3] == HyperlinkReference("/?hello=world&world=hello")
+    # check __contains__
+    for href in hrefs:
+        assert href in links
+    # check __iter__
+    for index, link in enumerate(links):
+        assert hrefs[index] == link
