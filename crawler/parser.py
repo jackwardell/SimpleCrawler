@@ -1,6 +1,5 @@
 import urllib.parse
 from html.parser import HTMLParser
-from typing import List
 
 
 class HyperlinkReference:
@@ -86,6 +85,14 @@ class HyperlinkReferenceCollection:
     def __repr__(self):
         return repr(self.collection)
 
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.collection == other.collection
+
+    def dedupe(self):
+        """remove all dupes and then create new instance of self"""
+        # quickest way to dedupe while retaining order
+        return HyperlinkReferenceCollection(list(dict.fromkeys(self.collection)))
+
 
 class AnchorTagParser(HTMLParser):
     """
@@ -121,7 +128,7 @@ class AnchorTagParser(HTMLParser):
         pass
 
 
-def get_hrefs_from_html(html: str, unique: bool = False) -> List[HyperlinkReference]:
+def get_hrefs_from_html(html: str, unique: bool = False) -> HyperlinkReferenceCollection:
     """
     * This function will find all <a> tags in a HTML snippet (via `AnchorTagParser`)
     * It will grab all href attributes in the <a> tags (as `HyperlinkReference` objects)
@@ -135,8 +142,7 @@ def get_hrefs_from_html(html: str, unique: bool = False) -> List[HyperlinkRefere
     parser = AnchorTagParser()
     parser.feed(html)
     if unique is True:
-        # quickest way to dedupe while retaining order
-        return list(dict.fromkeys(parser.found_links))
+        return parser.found_links.dedupe()
     elif unique is False:
         return parser.found_links
     else:

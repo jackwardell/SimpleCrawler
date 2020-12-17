@@ -186,7 +186,7 @@ def test_anchor_tag_parser_single_link(link):
     html, href = make_html(make_a_tag(link)), HyperlinkReference(link)
     parser = AnchorTagParser()
     parser.feed(html)
-    assert parser.found_links == [href]
+    assert parser.found_links.collection == [href]
 
 
 @pytest.mark.parametrize(
@@ -213,7 +213,7 @@ def test_anchor_tag_parser_multiple_links_no_duplicates(links):
     )
     parser = AnchorTagParser()
     parser.feed(html)
-    assert parser.found_links == hrefs
+    assert parser.found_links.collection == hrefs
 
 
 @pytest.mark.parametrize(
@@ -249,7 +249,7 @@ def test_anchor_tag_parser_multiple_links_with_duplicates(links):
     )
     parser = AnchorTagParser()
     parser.feed(html)
-    assert parser.found_links == hrefs
+    assert parser.found_links.collection == hrefs
 
 
 @pytest.mark.parametrize(
@@ -283,8 +283,8 @@ def test_get_hrefs_from_html_not_unique(links):
         make_html(make_a_tags(links)),
         [HyperlinkReference(link) for link in links],
     )
-    assert get_hrefs_from_html(html) == hrefs
-    assert get_hrefs_from_html(html, unique=False) == hrefs
+    assert get_hrefs_from_html(html).collection == hrefs
+    assert get_hrefs_from_html(html, unique=False).collection == hrefs
 
 
 @pytest.mark.parametrize(
@@ -337,7 +337,7 @@ def test_get_hrefs_from_html_unique(input_links_output_results):
     input_links, output_results = input_links_output_results
     html = make_html(make_a_tags(input_links))
     hrefs = [HyperlinkReference(link) for link in output_results]
-    assert get_hrefs_from_html(html, unique=True) == hrefs
+    assert get_hrefs_from_html(html, unique=True).collection == hrefs
 
 
 def test_hyperlink_reference_collection_behaves_like_list():
