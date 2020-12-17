@@ -27,10 +27,10 @@ class HyperlinkReference:
         return urllib.parse.urlunsplit(components)
 
     def __repr__(self):
-        return f'href="{self}"'
+        return f'HREF("{self}")'
 
     def __eq__(self, other):
-        return str(self) == other
+        return isinstance(other, self.__class__) and repr(self) == repr(other)
 
     def __hash__(self):
         return hash(repr(self))
@@ -93,7 +93,7 @@ def get_hrefs_from_html(html: str, unique: bool = False) -> List[HyperlinkRefere
     """
     * This function will find all <a> tags in a HTML snippet (via `AnchorTagParser`)
     * It will grab all href attributes in the <a> tags (as `HyperlinkReference`)
-    * If unique=True, it will remove duplicate HyperlinkReference (`via set() casting`)
+    * If unique=True, it will remove duplicate HyperlinkReference (`via dict.from_keys`)
     * It will return a list of HyperlinkReference's
 
     :param html: (str) a html snippet

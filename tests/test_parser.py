@@ -53,7 +53,7 @@ def make_a_tags(paths: list) -> str:
 def test_hyperlink_reference(input_link_and_output_result):
     input_link, output_result = input_link_and_output_result
     href = HyperlinkReference(input_link)
-    assert href == output_result
+    assert str(href) == output_result
 
 
 @pytest.mark.parametrize(
@@ -107,7 +107,7 @@ def test_hyperlink_join_with_relative_links(input_link_and_output_result):
     input_link, output_result = input_link_and_output_result
     href = HyperlinkReference(input_link)
     domain = "https://helloworld.com"
-    assert href.join(domain) == domain + output_result
+    assert str(href.join(domain)) == domain + output_result
 
 
 @pytest.mark.parametrize(
@@ -133,7 +133,7 @@ def test_hyperlink_join_with_absolute_links(input_link_and_output_result):
     input_link, output_result = input_link_and_output_result
     href = HyperlinkReference(input_link)
     domain = "https://helloworld.com"
-    assert href.join(domain) == output_result
+    assert str(href.join(domain)) == output_result
 
 
 @pytest.mark.parametrize(
@@ -155,8 +155,7 @@ def test_hyperlink_join_with_absolute_links(input_link_and_output_result):
 )
 def test_hyperlink_normalisation(input_link_and_output_result):
     input_link, output_result = input_link_and_output_result
-    href = HyperlinkReference(input_link)
-    assert href == output_result
+    assert str(HyperlinkReference(input_link)) == output_result
 
 
 @pytest.mark.parametrize(
