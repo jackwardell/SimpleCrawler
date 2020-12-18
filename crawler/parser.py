@@ -1,37 +1,52 @@
 import urllib.parse
 from html.parser import HTMLParser
 
+from .url_normalisation import normalise_url
+
 
 class HyperlinkReference:
     """
     a representation of a Hyperlink REFerence (href)
     """
 
-    __slots__ = ("scheme", "netloc", "path", "query", "fragment")
+    __slots__ = "url"
 
     def __init__(self, link: str):
-        if not isinstance(link, str):
-            raise TypeError("href links need to be strings")
-
         # split is the core element we want to build class around
-        normalised_link = urllib.parse.urljoin("/", link)
-        scheme, netloc, path, query, fragment = urllib.parse.urlsplit(normalised_link)
+        self.url = link
 
-        self.scheme = scheme.lower()
-        self.netloc = netloc.lower().removesuffix(".")
-        self.path = "/" + urllib.parse.quote(path, "/%").removeprefix("/")
-        self.query = urllib.parse.quote_plus(query, ":&=")
-        self.fragment = fragment
+    @property
+    def components(self) -> urllib.parse.SplitResult:
+        return urllib.parse.urlsplit(self.url)
+
+    @property
+    def scheme(self) -> str:
+        return self.components.scheme
+
+    @property
+    def authority(self) -> str:
+        return self.components.netloc
+
+    @property
+    def path(self) -> str:
+        return self.components.path
+
+    @property
+    def query(self) -> str:
+        return self.components.query
+
+    @property
+    def fragment(self) -> str:
+        return self.components.fragment
 
     def __str__(self):
-        components = (self.scheme, self.netloc, self.path, self.query, self.fragment)
-        return urllib.parse.urlunsplit(components)
+        return self.url
 
     def __repr__(self):
-        return f'HREF("{self}")'
+        return f'HREF("{self.url}")'
 
     def __eq__(self, other):
-        return isinstance(other, self.__class__) and repr(self) == repr(other)
+        return isinstance(other, self.__class__) and self.url == other.url
 
     def __hash__(self):
         return hash(repr(self))
@@ -52,8 +67,25 @@ class HyperlinkReference:
         :param host: (str) an
         :return:
         """
-        resolution = urllib.parse.urljoin(host, str(self))
-        return HyperlinkReference(resolution)
+        resolution = urllib.parse.urljoin(host, self.url)
+        return make_hyperlink(resolution)
+
+    @classmethod
+    def make(cls, link: str):
+        """
+        factory method for creating Hyperlinks
+
+        :param link: (str) any link/uri
+        :return: (Hyperlink) an instance of hyperlink
+        """
+        if not isinstance(link, str):
+            raise TypeError("href links need to be strings")
+
+        normalised_link = normalise_url(link)
+        return cls(normalised_link)
+
+
+make_hyperlink = HyperlinkReference.make
 
 
 class HyperlinkReferenceCollection:
@@ -147,7 +179,7 @@ class AnchorTagParser(HTMLParser):
             for attr, value in attrs:
                 # grab only hrefs
                 if attr == "href":
-                    href = HyperlinkReference(value)
+                    href = make_hyperlink(value)
                     self.found_links.append(href)
 
     def error(self, message: str) -> None:

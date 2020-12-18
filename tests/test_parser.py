@@ -2,8 +2,8 @@ import pytest
 
 from crawler.parser import AnchorTagParser
 from crawler.parser import get_hrefs_from_html
-from crawler.parser import HyperlinkReference
 from crawler.parser import HyperlinkReferenceCollection
+from crawler.parser import make_hyperlink
 
 
 def make_html(body: str) -> str:
@@ -53,7 +53,7 @@ def make_a_tags(paths: list) -> str:
 )
 def test_hyperlink_reference(input_link_and_output_result):
     input_link, output_result = input_link_and_output_result
-    href = HyperlinkReference(input_link)
+    href = make_hyperlink(input_link)
     assert str(href) == output_result
 
 
@@ -83,7 +83,7 @@ def test_hyperlink_reference(input_link_and_output_result):
 )
 def test_hyperlink_is_absolute_or_relative(input_link_and_output_result):
     input_link, output_result = input_link_and_output_result
-    href = HyperlinkReference(input_link)
+    href = make_hyperlink(input_link)
     assert href.is_absolute is output_result
     assert href.is_relative is not output_result
 
@@ -106,7 +106,7 @@ def test_hyperlink_is_absolute_or_relative(input_link_and_output_result):
 )
 def test_hyperlink_join_with_relative_links(input_link_and_output_result):
     input_link, output_result = input_link_and_output_result
-    href = HyperlinkReference(input_link)
+    href = make_hyperlink(input_link)
     domain = "https://helloworld.com"
     assert str(href.join(domain)) == domain + output_result
 
@@ -132,7 +132,7 @@ def test_hyperlink_join_with_relative_links(input_link_and_output_result):
 )
 def test_hyperlink_join_with_absolute_links(input_link_and_output_result):
     input_link, output_result = input_link_and_output_result
-    href = HyperlinkReference(input_link)
+    href = make_hyperlink(input_link)
     domain = "https://helloworld.com"
     assert str(href.join(domain)) == output_result
 
@@ -156,7 +156,7 @@ def test_hyperlink_join_with_absolute_links(input_link_and_output_result):
 )
 def test_hyperlink_normalisation(input_link_and_output_result):
     input_link, output_result = input_link_and_output_result
-    assert str(HyperlinkReference(input_link)) == output_result
+    assert str(make_hyperlink(input_link)) == output_result
 
 
 @pytest.mark.parametrize(
@@ -183,7 +183,7 @@ def test_hyperlink_normalisation(input_link_and_output_result):
     ],
 )
 def test_anchor_tag_parser_single_link(link):
-    html, href = make_html(make_a_tag(link)), HyperlinkReference(link)
+    html, href = make_html(make_a_tag(link)), make_hyperlink(link)
     parser = AnchorTagParser()
     parser.feed(html)
     assert parser.found_links.collection == [href]
@@ -210,7 +210,7 @@ def test_anchor_tag_parser_single_link(link):
 def test_anchor_tag_parser_multiple_links_no_duplicates(links):
     html, hrefs = (
         make_html(make_a_tags(links)),
-        [HyperlinkReference(link) for link in links],
+        [make_hyperlink(link) for link in links],
     )
     parser = AnchorTagParser()
     parser.feed(html)
@@ -247,7 +247,7 @@ def test_anchor_tag_parser_multiple_links_no_duplicates(links):
 def test_anchor_tag_parser_multiple_links_with_duplicates(links):
     html, hrefs = (
         make_html(make_a_tags(links)),
-        [HyperlinkReference(link) for link in links],
+        [make_hyperlink(link) for link in links],
     )
     parser = AnchorTagParser()
     parser.feed(html)
@@ -284,7 +284,7 @@ def test_anchor_tag_parser_multiple_links_with_duplicates(links):
 def test_get_hrefs_from_html_not_unique(links):
     html, hrefs = (
         make_html(make_a_tags(links)),
-        [HyperlinkReference(link) for link in links],
+        [make_hyperlink(link) for link in links],
     )
     assert get_hrefs_from_html(html).collection == hrefs
     assert get_hrefs_from_html(html, unique=False).collection == hrefs
@@ -341,28 +341,28 @@ def test_get_hrefs_from_html_not_unique(links):
 def test_get_hrefs_from_html_unique(input_links_output_results):
     input_links, output_results = input_links_output_results
     html = make_html(make_a_tags(input_links))
-    hrefs = [HyperlinkReference(link) for link in output_results]
+    hrefs = [make_hyperlink(link) for link in output_results]
     assert get_hrefs_from_html(html, unique=True).collection == hrefs
     assert get_hrefs_from_html(html, unique=True) == HyperlinkReferenceCollection(hrefs)
 
 
 def test_hyperlink_reference_collection_behaves_like_list():
     hrefs = [
-        HyperlinkReference("/hello"),
-        HyperlinkReference("/world"),
-        HyperlinkReference("/?hello=world"),
+        make_hyperlink("/hello"),
+        make_hyperlink("/world"),
+        make_hyperlink("/?hello=world"),
     ]
     # check __init__
     links = HyperlinkReferenceCollection(hrefs)
     # check __len__
     assert len(links) == 3
     # check append
-    links.append(HyperlinkReference("/?hello=world&world=hello"))
+    links.append(make_hyperlink("/?hello=world&world=hello"))
     # check __len__ again
     assert len(links) == 4
     # check __getitem__
-    assert links[0] == HyperlinkReference("/hello")
-    assert links[3] == HyperlinkReference("/?hello=world&world=hello")
+    assert links[0] == make_hyperlink("/hello")
+    assert links[3] == make_hyperlink("/?hello=world&world=hello")
     # check __contains__
     for href in hrefs:
         assert href in links
@@ -395,10 +395,10 @@ def test_hyperlink_reference_collection_dedupe(input_and_output_links):
 )
 def test_hyperlink_reference_collection_relative_links_join_all(input_and_output):
     input_links, output_links = input_and_output
-    links = HyperlinkReferenceCollection([HyperlinkReference(link) for link in input_links])
+    links = HyperlinkReferenceCollection([make_hyperlink(link) for link in input_links])
     domain = "https://www.google.com"
     assert links.join_all(domain).collection == [
-        HyperlinkReference(domain + link) for link in output_links
+        make_hyperlink(domain + link) for link in output_links
     ]
 
 
@@ -415,9 +415,9 @@ def test_hyperlink_reference_collection_relative_links_join_all(input_and_output
 )
 def test_hyperlink_reference_collection_absolute_links_join_all(input_and_output):
     input_links, output_links = input_and_output
-    links = HyperlinkReferenceCollection([HyperlinkReference(link) for link in input_links])
+    links = HyperlinkReferenceCollection([make_hyperlink(link) for link in input_links])
     domain = "https://www.google.com"
-    assert links.join_all(domain).collection == [HyperlinkReference(link) for link in output_links]
+    assert links.join_all(domain).collection == [make_hyperlink(link) for link in output_links]
 
 
 @pytest.mark.parametrize(
@@ -436,7 +436,7 @@ def test_hyperlink_reference_collection_absolute_links_join_all(input_and_output
             ["http://www.google.com/"],
         ),
         (
-            ("netloc", "www.example.com"),
+            ("authority", "www.example.com"),
             [
                 "/",
                 "/hello-world?hello=world",
@@ -499,11 +499,11 @@ def test_hyperlink_reference_collection_filter_by(
 ):
     fields, input_links, output_links = fields_and_input_links_and_output_links
 
-    input_hrefs = HyperlinkReferenceCollection([HyperlinkReference(link) for link in input_links])
+    input_hrefs = HyperlinkReferenceCollection([make_hyperlink(link) for link in input_links])
     k, v = fields
     filtered_hrefs = input_hrefs.filter_by(**{k: v})
 
-    output_hrefs = HyperlinkReferenceCollection([HyperlinkReference(link) for link in output_links])
+    output_hrefs = HyperlinkReferenceCollection([make_hyperlink(link) for link in output_links])
 
     assert filtered_hrefs == output_hrefs
 
@@ -512,7 +512,7 @@ def test_hyperlink_reference_collection_filter_by(
     "fields_and_input_links_and_output_links",
     [
         (
-            {"scheme": "http", "netloc": "www.example.com"},
+            {"scheme": "http", "authority": "www.example.com"},
             [
                 "http://www.google.com/",
                 "/hello-world?hello=world",
@@ -525,7 +525,7 @@ def test_hyperlink_reference_collection_filter_by(
         ),
         (
             {
-                "netloc": "www.example.com",
+                "authority": "www.example.com",
                 "path": "/hello-world",
                 "query": "world=hello",
             },
@@ -557,7 +557,7 @@ def test_hyperlink_reference_collection_filter_by(
         (
             {
                 "scheme": "https",
-                "netloc": "www.example.com",
+                "authority": "www.example.com",
                 "path": "/",
                 "query": "",
                 "fragment": "",
@@ -575,7 +575,7 @@ def test_hyperlink_reference_collection_filter_by(
         (
             {
                 "scheme": "https",
-                "netloc": "www.example.com",
+                "authority": "www.example.com",
                 "path": "/",
                 "query": "",
                 "fragment": "",
@@ -597,9 +597,9 @@ def test_hyperlink_reference_collection_filter_by_mutli_kwargs(
 ):
     fields, input_links, output_links = fields_and_input_links_and_output_links
 
-    input_hrefs = HyperlinkReferenceCollection([HyperlinkReference(link) for link in input_links])
+    input_hrefs = HyperlinkReferenceCollection([make_hyperlink(link) for link in input_links])
     filtered_hrefs = input_hrefs.filter_by(**fields)
 
-    output_hrefs = HyperlinkReferenceCollection([HyperlinkReference(link) for link in output_links])
+    output_hrefs = HyperlinkReferenceCollection([make_hyperlink(link) for link in output_links])
 
     assert filtered_hrefs == output_hrefs
