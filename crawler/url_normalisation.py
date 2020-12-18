@@ -166,5 +166,30 @@ def normalise_query(query: str) -> str:
     return query
 
 
+def normalise_fragment(fragment: str) -> str:
+    """
+    normalise a fragment (e.g. #hello)
+    NB: doesn't include #
+
+    :param fragment: (str) some fragment
+    :return: (str) a normalised fragment
+
+    >>> normalise_fragment('')
+    ''
+    >>> normalise_fragment('hello')
+    'hello'
+    >>> normalise_fragment('hello:~world')
+    'hello:~world'
+    >>> normalise_fragment('hello world')
+    'hello+world'
+    >>> normalise_fragment('hello+world')
+    'hello%2Bworld'
+    >>> normalise_fragment("what's this?")
+    'what%27s+this%3F'
+    """
+    fragment = urllib.parse.quote_plus(fragment, safe=":~")
+    return fragment
+
+
 if __name__ == "__main__":
     doctest.testmod()
