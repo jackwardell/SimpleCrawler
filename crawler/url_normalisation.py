@@ -78,5 +78,48 @@ def normalise_userinfo(userinfo: str) -> str:
     return userinfo
 
 
+def normalise_authority(authority: str) -> str:
+    """
+    normalise authority (e.g. hello:world@www.example.com)
+    NB: urllib.parse wrongly calls this netloc, which is actually just www.example.com
+
+    :param authority: (str) any authority with userinfo and/or netloc
+    :return: (str) normalised authority
+
+    >>> normalise_authority('')
+    ''
+    >>> normalise_authority('www.EXAMPLE.com')
+    'www.example.com'
+    >>> normalise_authority('hello@www.example.com')
+    'hello@www.example.com'
+    >>> normalise_authority('hello:@www.EXAMPLE.com')
+    'hello@www.example.com'
+    >>> normalise_authority('hello:world@www.example.com')
+    'hello:world@www.example.com'
+    >>> normalise_authority('@www.example.com')
+    'www.example.com'
+    >>> normalise_authority('www.example.com.')
+    'www.example.com'
+
+    # todo normalise port?
+    """
+    if authority == "":
+        return authority
+
+    if "@" in authority:
+        userinfo, host = authority.split("@")
+        userinfo = normalise_userinfo(userinfo)
+    else:
+        userinfo, host = "", authority
+
+    host = normalise_host(host)
+    if userinfo != "":
+        authority = "@".join([userinfo, host])
+    else:
+        authority = host
+
+    return authority
+
+
 if __name__ == "__main__":
     doctest.testmod()
