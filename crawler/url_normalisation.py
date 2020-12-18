@@ -34,5 +34,28 @@ def normalise_scheme(scheme: str) -> str:
     return scheme
 
 
+def normalise_host(host: str) -> str:
+    """
+    normalise host (e.g. localhost, www.google.com)
+
+    :param host: (str) any host
+    :return: (str) normalised lower case host
+
+    >>> normalise_host('')
+    ''
+    >>> normalise_host('www.google.com')
+    'www.google.com'
+    >>> normalise_host('www.EXAMPLE.com')
+    'www.example.com'
+    >>> normalise_host('www.example.com.')
+    'www.example.com'
+
+    todo: idna?
+    """
+    host = host.lower()
+    host = host.strip(".")
+    return host
+
+
 if __name__ == "__main__":
     doctest.testmod()
