@@ -129,17 +129,17 @@ def test_hyperlink_join_with_absolute_links(input_link_and_output_result):
         ("#hello", "/#hello"),
         ("/#hello", "/#hello"),
         ("HTTPS://WWW.eXaMpLe.cOm/", "https://www.example.com/"),
-        ("?hello=world+hello+world", "/?hello=world%2Bhello%2Bworld"),
+        ("?hello=world+hello world", "/?hello=world%2Bhello+world"),
         (
             "/hello-world?hello=world+hello+world",
             "/hello-world?hello=world%2Bhello%2Bworld",
         ),
-        ("/?hello=world&world=hello", "/?hello=world&world=hello"),
+        ("/?world=hello&hello=world", "/?hello=world&world=hello"),
     ],
 )
 def test_hyperlink_normalisation(input_link_and_output_result):
     input_link, output_result = input_link_and_output_result
-    assert str(make_hyperlink(input_link)) == output_result
+    assert make_hyperlink(input_link).url == output_result
 
 
 def test_hyperlink_collection_behaves_like_list():
