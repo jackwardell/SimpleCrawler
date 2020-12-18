@@ -144,11 +144,12 @@ def normalise_path(path: str) -> str:
     return path
 
 
-def normalise_query(query: str) -> str:
+def normalise_query(query: str, sort_params: bool = True) -> str:
     """
     normalise a query string (e.g. hello=world&world=hello)
 
     :param query: (str) query string
+    :param sort_params: (bool) where to sort params alphabetically by query param
     :return: a normalised query string
 
     >>> normalise_query('')
@@ -159,11 +160,20 @@ def normalise_query(query: str) -> str:
     'hello=world&world=hello'
     >>> normalise_query('greeting=hi there')
     'greeting=hi+there'
-
-    # todo sort query params?
+    >>> normalise_query('z=y&a=b&l=m&k=j')
+    'a=b&k=j&l=m&z=y'
     """
     query = urllib.parse.quote_plus(query, safe=":&=")
-    return query
+    if sort_params is False:
+        return query
+
+    elif sort_params is True:
+        params = query.split("&")
+        query = "&".join(sorted(params))
+        return query
+
+    else:
+        raise TypeError("sort_params must be True or False")
 
 
 def normalise_fragment(fragment: str) -> str:
