@@ -436,7 +436,7 @@ def test_hyperlink_collection_absolute_links_join_all(input_and_output):
             ["http://www.google.com/"],
         ),
         (
-            ("authority", "www.example.com"),
+            ("authority", ":@www.EXAMPLE.com."),
             [
                 "/",
                 "/hello-world?hello=world",
@@ -514,7 +514,7 @@ def test_hyperlink_collection_filter_by(
         (
             {"scheme": "http", "authority": "www.example.com"},
             [
-                "http://www.google.com/",
+                "http://www.google.com./",
                 "/hello-world?hello=world",
                 "#hello",
                 "/?hello=world#hello",
@@ -574,8 +574,8 @@ def test_hyperlink_collection_filter_by(
         ),
         (
             {
-                "scheme": "https",
-                "authority": "www.example.com",
+                "scheme": "HTTPS",
+                "authority": "@www.example.com",
                 "path": "/",
                 "query": "",
                 "fragment": "",

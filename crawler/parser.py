@@ -1,6 +1,7 @@
 import urllib.parse
 from html.parser import HTMLParser
 
+from .url_normalisation import normalise_kwargs
 from .url_normalisation import normalise_url
 
 
@@ -148,6 +149,7 @@ class HyperlinkCollection:
         :param kwargs: any of: scheme, authority, path, query, fragment = <some value>
         :return: new instance of HyperlinkReferenceCollection that has entries filtered
         """
+        kwargs = normalise_kwargs(**kwargs)
         results = []
         for link in self.collection:
             if all([getattr(link, k) == v for k, v in kwargs.items()]):
