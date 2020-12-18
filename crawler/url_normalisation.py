@@ -57,5 +57,26 @@ def normalise_host(host: str) -> str:
     return host
 
 
+def normalise_userinfo(userinfo: str) -> str:
+    """
+    normalise userinfo (e.g. hello:world)
+    NB: passwords are NOT recommended to be sent via clear text
+
+    :param userinfo: (str) any defined user info, with username and/or password
+    :return: (str) normalised user info
+
+    >>> normalise_userinfo('')
+    ''
+    >>> normalise_userinfo('hello:world')
+    'hello:world'
+    >>> normalise_userinfo('hello:')
+    'hello'
+    >>> normalise_userinfo(':')
+    ''
+    """
+    userinfo = userinfo.strip(":")
+    return userinfo
+
+
 if __name__ == "__main__":
     doctest.testmod()
