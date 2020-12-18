@@ -220,6 +220,8 @@ def normalise_url(url: str) -> str:
     'http://hello@example.com/hello/world?hello=world&world=hello#hi'
     >>> normalise_url("HTTPS://HELLO.WORLD@EXAMPLE.CO.UK/ hi there")
     'https://HELLO.WORLD@example.co.uk/%20hi%20there'
+    >>> normalise_url('?world=hello&hello=world')
+    '/?hello=world&world=hello'
     """
     # split is the core element we want to build class around
     url = urllib.parse.urljoin("/", url)
