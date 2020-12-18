@@ -4,7 +4,7 @@ from html.parser import HTMLParser
 from .url_normalisation import normalise_url
 
 
-class HyperlinkReference:
+class Hyperlink:
     """
     a representation of a Hyperlink REFerence (href)
     """
@@ -85,10 +85,10 @@ class HyperlinkReference:
         return cls(normalised_link)
 
 
-make_hyperlink = HyperlinkReference.make
+make_hyperlink = Hyperlink.make
 
 
-class HyperlinkReferenceCollection:
+class HyperlinkCollection:
     """
     a list for hyperlink references that allows for simple transformations
     """
@@ -127,7 +127,7 @@ class HyperlinkReferenceCollection:
         :return: new instance of HyperlinkReferenceCollection that is deduped
         """
         # quickest way to dedupe while retaining order
-        return HyperlinkReferenceCollection(list(dict.fromkeys(self.collection)))
+        return HyperlinkCollection(list(dict.fromkeys(self.collection)))
 
     def join_all(self, host: str):
         """
@@ -136,7 +136,7 @@ class HyperlinkReferenceCollection:
         :param host: (str) host to apply join to on HyperlinkReference
         :return: new instance of HyperlinkReferenceCollection that has entries all joined
         """
-        return HyperlinkReferenceCollection([link.join(host) for link in self.collection])
+        return HyperlinkCollection([link.join(host) for link in self.collection])
 
     def filter_by(self, **kwargs):
         """
@@ -151,7 +151,7 @@ class HyperlinkReferenceCollection:
         for link in self.collection:
             if all([getattr(link, k) == v for k, v in kwargs.items()]):
                 results.append(link)
-        return HyperlinkReferenceCollection(results)
+        return HyperlinkCollection(results)
 
 
 class AnchorTagParser(HTMLParser):
@@ -168,7 +168,7 @@ class AnchorTagParser(HTMLParser):
         super().__init__()
 
         # create set of links found
-        self.found_links = HyperlinkReferenceCollection()
+        self.found_links = HyperlinkCollection()
 
     def handle_starttag(self, tag: str, attrs: list) -> None:
         # https://docs.python.org/3/library/html.parser.html#html.parser.HTMLParser.handle_starttag
@@ -188,7 +188,7 @@ class AnchorTagParser(HTMLParser):
         pass
 
 
-def get_hrefs_from_html(html: str, unique: bool = False) -> HyperlinkReferenceCollection:
+def get_hrefs_from_html(html: str, unique: bool = False) -> HyperlinkCollection:
     """
     * This function will find all <a> tags in a HTML snippet (via `AnchorTagParser`)
     * It will grab all href attributes in the <a> tags (as `HyperlinkReference` objects)
