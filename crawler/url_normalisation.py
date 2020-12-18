@@ -236,5 +236,26 @@ def normalise_url(url: str) -> str:
     return urllib.parse.urlunsplit(components)
 
 
+def normalise_kwargs(**kwargs) -> dict:
+    """
+    simple helper to normalise dict of kwargs (e.g. {'scheme': 'HTTPS', 'query': 'a=b')
+
+    :param kwargs: keyword args for things to normalise
+    :return: (dict) of kwargs
+
+    >>> normalise_kwargs(scheme="HTTPS", authority="@example.com", fragment='hi')
+    {'scheme': 'https', 'authority': 'example.com', 'fragment': 'hi'}
+    """
+    # python magic to get above funcs for normalisation
+    # __import__(__name__).url_normalisation get this file
+    # getattr will get any variable in this scope (basically locals())
+    # we find the function f"normalise_{k}" where k is scheme, authority, etc
+    kwargs = {
+        k: getattr(__import__(__name__).url_normalisation, f"normalise_{k}")(v)
+        for k, v in kwargs.items()
+    }
+    return kwargs
+
+
 if __name__ == "__main__":
     doctest.testmod()

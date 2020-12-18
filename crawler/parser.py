@@ -67,6 +67,7 @@ class Hyperlink:
         :param host: (str) an
         :return:
         """
+        host = normalise_url(host)
         resolution = urllib.parse.urljoin(host, self.url)
         return make_hyperlink(resolution)
 
@@ -140,11 +141,11 @@ class HyperlinkCollection:
 
     def filter_by(self, **kwargs):
         """
-        apply filter_by to all items, filtering by: scheme, netloc, path, query, fragment
+        apply filter_by to all items, filtering by: scheme, authority, path, query, fragment
 
         e.g. links.filter_by(scheme='https')
 
-        :param kwargs: any of: scheme, netloc, path, query, fragment = <some value>
+        :param kwargs: any of: scheme, authority, path, query, fragment = <some value>
         :return: new instance of HyperlinkReferenceCollection that has entries filtered
         """
         results = []
