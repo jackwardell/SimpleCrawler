@@ -506,3 +506,100 @@ def test_hyperlink_reference_collection_filter_by(
     output_hrefs = HyperlinkReferenceCollection([HyperlinkReference(link) for link in output_links])
 
     assert filtered_hrefs == output_hrefs
+
+
+@pytest.mark.parametrize(
+    "fields_and_input_links_and_output_links",
+    [
+        (
+            {"scheme": "http", "netloc": "www.example.com"},
+            [
+                "http://www.google.com/",
+                "/hello-world?hello=world",
+                "#hello",
+                "/?hello=world#hello",
+                "http://www.example.com",
+                "https://example.com/hello-world?world=hello",
+            ],
+            ["http://www.example.com"],
+        ),
+        (
+            {
+                "netloc": "www.example.com",
+                "path": "/hello-world",
+                "query": "world=hello",
+            },
+            [
+                "/",
+                "/hello-world?hello=world",
+                "#hello",
+                "/?hello=world#hello",
+                "https://www.example.com",
+                "https://www.example.com/hello-world?world=hello",
+            ],
+            ["https://www.example.com/hello-world?world=hello"],
+        ),
+        (
+            {"path": "/hello", "query": "hello=world", "fragment": "here"},
+            [
+                "/hello?hello=world#here",
+                "/hello-world?hello=world",
+                "#hello",
+                "/?hello=world#hello",
+                "https://www.example.com",
+                "https://yoyoyo.co.uk/hello?hello=world#here",
+            ],
+            [
+                "/hello?hello=world#here",
+                "https://yoyoyo.co.uk/hello?hello=world#here",
+            ],
+        ),
+        (
+            {
+                "scheme": "https",
+                "netloc": "www.example.com",
+                "path": "/",
+                "query": "",
+                "fragment": "",
+            },
+            [
+                "/",
+                "/hello-world?hello=world",
+                "#hello",
+                "/?hello=world#hello",
+                "https://www.example.com",
+                "https://example.com/?world=hello",
+            ],
+            ["https://www.example.com"],
+        ),
+        (
+            {
+                "scheme": "https",
+                "netloc": "www.example.com",
+                "path": "/",
+                "query": "",
+                "fragment": "",
+            },
+            [
+                "/",
+                "/hello-world?hello=world",
+                "#hello",
+                "/?hello=world#hello",
+                "https://www.yoyoyo.com",
+                "https://example.com/?world=hello",
+            ],
+            [],
+        ),
+    ],
+)
+def test_hyperlink_reference_collection_filter_by_mutli_kwargs(
+    fields_and_input_links_and_output_links,
+):
+    fields, input_links, output_links = fields_and_input_links_and_output_links
+
+    input_hrefs = HyperlinkReferenceCollection([HyperlinkReference(link) for link in input_links])
+    filtered_hrefs = input_hrefs.filter_by(**fields)
+
+    output_hrefs = HyperlinkReferenceCollection([HyperlinkReference(link) for link in output_links])
+
+    assert filtered_hrefs == output_hrefs
