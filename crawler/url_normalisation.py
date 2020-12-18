@@ -14,6 +14,7 @@ why?
 
 """
 import doctest
+import urllib.parse
 
 
 def normalise_scheme(scheme: str) -> str:
@@ -119,6 +120,28 @@ def normalise_authority(authority: str) -> str:
         authority = host
 
     return authority
+
+
+def normalise_path(path: str) -> str:
+    """
+    normalise a path (e.g. /hello/world)
+
+    :param path: (str) url path
+    :return: (str) a normalised path
+
+    >>> normalise_path('')
+    '/'
+    >>> normalise_path('/hello/world')
+    '/hello/world'
+    >>> normalise_path('hello')
+    '/hello'
+    >>> normalise_path("hello world")
+    '/hello%20world'
+    """
+    path = urllib.parse.quote(path, safe="/%")
+    if not path.startswith("/"):
+        path = "/" + path
+    return path
 
 
 if __name__ == "__main__":
