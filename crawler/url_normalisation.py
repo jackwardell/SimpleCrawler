@@ -144,5 +144,27 @@ def normalise_path(path: str) -> str:
     return path
 
 
+def normalise_query(query: str) -> str:
+    """
+    normalise a query string (e.g. hello=world&world=hello)
+
+    :param query: (str) query string
+    :return: a normalised query string
+
+    >>> normalise_query('')
+    ''
+    >>> normalise_query('hello=world')
+    'hello=world'
+    >>> normalise_query('hello=world&world=hello')
+    'hello=world&world=hello'
+    >>> normalise_query('greeting=hi there')
+    'greeting=hi+there'
+
+    # todo sort query params?
+    """
+    query = urllib.parse.quote_plus(query, safe=":&=")
+    return query
+
+
 if __name__ == "__main__":
     doctest.testmod()
