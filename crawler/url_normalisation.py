@@ -9,8 +9,8 @@ why?
     * HTTPS://:@WWW.EXAMPLE.COM?greeting=hello world
     * https://www.example.com/?greeting=hello+world
 
-    these are the same and although many web devs building hrefs wont
-    make these mistake, they can be encountered and need to be handled
+    these are the same and although many web devs building hrefs won't be
+    make these mistakes, they can be encountered and need to be handled
 
 """
 import doctest
