@@ -2,6 +2,7 @@ from html.parser import HTMLParser
 
 from .hyperlink import HyperlinkCollection
 from .hyperlink import make_hyperlink
+from .hyperlink import make_hyperlink_collection
 
 
 class AnchorTagParser(HTMLParser):
@@ -18,7 +19,7 @@ class AnchorTagParser(HTMLParser):
         super().__init__()
 
         # create set of links found
-        self.found_links = HyperlinkCollection()
+        self.found_links = make_hyperlink_collection()
 
     def handle_starttag(self, tag: str, attrs: list) -> None:
         # https://docs.python.org/3/library/html.parser.html#html.parser.HTMLParser.handle_starttag

@@ -110,6 +110,9 @@ class HyperlinkCollection:
         return item in self.collection
 
     def append(self, link):
+        if not isinstance(link, Hyperlink):
+            raise TypeError("link must be a Hyperlink")
+
         self.collection.append(link)
 
     def __str__(self):
@@ -154,3 +157,26 @@ class HyperlinkCollection:
             if all([getattr(link, k) == v for k, v in kwargs.items()]):
                 results.append(link)
         return HyperlinkCollection(results)
+
+    @classmethod
+    def make(cls, links: list = None):
+        """
+        factory method for creating Hyperlinks
+
+        :param links: (list) any list of link/uri
+        :return: (HyperlinkCollection) an instance of hyperlink collection
+        """
+        if links is None:
+            return cls()
+
+        if not isinstance(links, list):
+            raise TypeError("href links needs to be a list")
+
+        for link in links:
+            if not isinstance(link, Hyperlink):
+                raise TypeError("links must all be Hyperlink objects")
+
+        return cls(links)
+
+
+make_hyperlink_collection = HyperlinkCollection.make

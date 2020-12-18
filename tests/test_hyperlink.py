@@ -1,7 +1,7 @@
 import pytest
 
-from crawler.hyperlink import HyperlinkCollection
 from crawler.hyperlink import make_hyperlink
+from crawler.hyperlink import make_hyperlink_collection
 
 
 @pytest.mark.parametrize(
@@ -149,7 +149,7 @@ def test_hyperlink_collection_behaves_like_list():
         make_hyperlink("/?hello=world"),
     ]
     # check __init__
-    links = HyperlinkCollection(hrefs)
+    links = make_hyperlink_collection(hrefs)
     # check __len__
     assert len(links) == 3
     # check append
@@ -177,8 +177,10 @@ def test_hyperlink_collection_behaves_like_list():
 )
 def test_hyperlink_collection_dedupe(input_and_output_links):
     input_links, output_links = input_and_output_links
-    links = HyperlinkCollection(input_links)
-    assert links.dedupe() == HyperlinkCollection(output_links)
+    links = make_hyperlink_collection([make_hyperlink(link) for link in input_links])
+    assert links.dedupe() == make_hyperlink_collection(
+        [make_hyperlink(link) for link in output_links]
+    )
 
 
 @pytest.mark.parametrize(
@@ -191,7 +193,7 @@ def test_hyperlink_collection_dedupe(input_and_output_links):
 )
 def test_hyperlink_collection_relative_links_join_all(input_and_output):
     input_links, output_links = input_and_output
-    links = HyperlinkCollection([make_hyperlink(link) for link in input_links])
+    links = make_hyperlink_collection([make_hyperlink(link) for link in input_links])
     domain = "https://www.google.com"
     assert links.join_all(domain).collection == [
         make_hyperlink(domain + link) for link in output_links
@@ -211,7 +213,7 @@ def test_hyperlink_collection_relative_links_join_all(input_and_output):
 )
 def test_hyperlink_collection_absolute_links_join_all(input_and_output):
     input_links, output_links = input_and_output
-    links = HyperlinkCollection([make_hyperlink(link) for link in input_links])
+    links = make_hyperlink_collection([make_hyperlink(link) for link in input_links])
     domain = "https://www.google.com"
     assert links.join_all(domain).collection == [make_hyperlink(link) for link in output_links]
 
@@ -295,11 +297,11 @@ def test_hyperlink_collection_filter_by(
 ):
     fields, input_links, output_links = fields_and_input_links_and_output_links
 
-    input_hrefs = HyperlinkCollection([make_hyperlink(link) for link in input_links])
+    input_hrefs = make_hyperlink_collection([make_hyperlink(link) for link in input_links])
     k, v = fields
     filtered_hrefs = input_hrefs.filter_by(**{k: v})
 
-    output_hrefs = HyperlinkCollection([make_hyperlink(link) for link in output_links])
+    output_hrefs = make_hyperlink_collection([make_hyperlink(link) for link in output_links])
 
     assert filtered_hrefs == output_hrefs
 
@@ -393,9 +395,9 @@ def test_hyperlink_collection_filter_by_mutli_kwargs(
 ):
     fields, input_links, output_links = fields_and_input_links_and_output_links
 
-    input_hrefs = HyperlinkCollection([make_hyperlink(link) for link in input_links])
+    input_hrefs = make_hyperlink_collection([make_hyperlink(link) for link in input_links])
     filtered_hrefs = input_hrefs.filter_by(**fields)
 
-    output_hrefs = HyperlinkCollection([make_hyperlink(link) for link in output_links])
+    output_hrefs = make_hyperlink_collection([make_hyperlink(link) for link in output_links])
 
     assert filtered_hrefs == output_hrefs
