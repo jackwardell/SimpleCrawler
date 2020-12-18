@@ -191,5 +191,38 @@ def normalise_fragment(fragment: str) -> str:
     return fragment
 
 
+def normalise_url(url: str) -> str:
+    """
+    normalise any url
+
+    :param url: (str) any url to normalise
+    :return: (str) normalised url
+
+    >>> normalise_url('')
+    '/'
+    >>> normalise_url('www.EXAMPLE.com?hello=world')
+    '/www.EXAMPLE.com?hello=world'
+    >>> normalise_url('http://www.EXAMPLE.com?hello=world')
+    'http://www.example.com/?hello=world'
+    >>> normalise_url('http://@example.com#hello')
+    'http://example.com/#hello'
+    >>> normalise_url('http://hello:@example.com/hello/world?hello=world&world=hello#hi')
+    'http://hello@example.com/hello/world?hello=world&world=hello#hi'
+    >>> normalise_url("HTTPS://HELLO.WORLD@EXAMPLE.CO.UK/ hi there")
+    'https://HELLO.WORLD@example.co.uk/%20hi%20there'
+    """
+    # split is the core element we want to build class around
+    url = urllib.parse.urljoin("/", url)
+    scheme, netloc, path, query, fragment = urllib.parse.urlsplit(url)
+    components = (
+        normalise_scheme(scheme),
+        normalise_authority(netloc),
+        normalise_path(path),
+        normalise_query(query),
+        normalise_fragment(fragment),
+    )
+    return urllib.parse.urlunsplit(components)
+
+
 if __name__ == "__main__":
     doctest.testmod()
