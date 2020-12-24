@@ -1,24 +1,12 @@
 import pytest
 
-from crawler.hyperlink import HyperlinkCollection
-from crawler.hyperlink import make_hyperlink
-from crawler.parser import AnchorTagParser
-from crawler.parser import get_hrefs_from_html
-
-
-def make_html(body: str) -> str:
-    """make a html doc by passing data to appear in <body> tag"""
-    return f"<html><head></head><body>{body}</body></html>"
-
-
-def make_a_tag(path: str) -> str:
-    """make a <a> tag with path as HREF value"""
-    return f'<a href="{path}">another link</a>'
-
-
-def make_a_tags(paths: list) -> str:
-    """make multiple <a> tags (via `make_a_tag`) seperated by <br> tags"""
-    return "<br>".join([make_a_tag(path) for path in paths])
+from tests.conftest import make_a_tag
+from tests.conftest import make_a_tags
+from tests.conftest import make_html
+from web_crawler.hyperlink import HyperlinkCollection
+from web_crawler.hyperlink import make_hyperlink
+from web_crawler.parser import AnchorTagParser
+from web_crawler.parser import get_hrefs_from_html
 
 
 @pytest.mark.parametrize(

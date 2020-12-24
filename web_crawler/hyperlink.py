@@ -1,13 +1,13 @@
 import urllib.parse
 from typing import Union
 
-from crawler.url_normalisation import normalise_authority
-from crawler.url_normalisation import normalise_fragment
-from crawler.url_normalisation import normalise_kwargs
-from crawler.url_normalisation import normalise_path
-from crawler.url_normalisation import normalise_query
-from crawler.url_normalisation import normalise_scheme
-from crawler.url_normalisation import normalise_url
+from web_crawler.url_normalisation import normalise_authority
+from web_crawler.url_normalisation import normalise_fragment
+from web_crawler.url_normalisation import normalise_kwargs
+from web_crawler.url_normalisation import normalise_path
+from web_crawler.url_normalisation import normalise_query
+from web_crawler.url_normalisation import normalise_scheme
+from web_crawler.url_normalisation import normalise_url
 
 
 class Hyperlink:

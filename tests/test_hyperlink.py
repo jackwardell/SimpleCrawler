@@ -1,7 +1,7 @@
 import pytest
 
-from crawler.hyperlink import make_hyperlink
-from crawler.hyperlink import make_hyperlink_collection
+from web_crawler.hyperlink import make_hyperlink
+from web_crawler.hyperlink import make_hyperlink_collection
 
 
 @pytest.mark.parametrize(
