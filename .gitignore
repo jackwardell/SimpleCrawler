@@ -4,4 +4,4 @@ venv/*
 *.egg-info/*
 dist/*
 build/*
-mothballed.py
+.DS_Store
