@@ -33,6 +33,9 @@ setup(
         "Natural Language :: English",
         "Intended Audience :: Developers",
     ],
+    entry_points={
+        "console_scripts": ["crawl=web_crawler.cli:crawl"],
+    },
     keywords="python",
     python_requires=">=3.5",
 )
