@@ -12,7 +12,7 @@ TEST_URL = "https://www.example.com"
 @pytest.mark.parametrize("user_agent", [("-u", "Tester"), ("--user-agent", "Tester"), None])
 @pytest.mark.parametrize("timeout", [("-t", "30"), ("--timeout", "30"), None])
 @pytest.mark.parametrize("check_head", ["-h", "--check-head", None])
-def test_crawl(user_agent, timeout, check_head):
+def test_crawl_debug(user_agent, timeout, check_head):
     runner = CliRunner()
 
     user_agent_arg = [] if user_agent is None else [user_agent[0], user_agent[1]]

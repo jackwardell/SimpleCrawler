@@ -45,6 +45,7 @@ class Crawler:
             for href in hrefs:
                 if href not in self.seen_urls:
                     self.queue.put(href)
+                    self.seen_urls.add(href)
 
         except (ClientError, ServerError, WrongMIMEType):
             pass
@@ -56,14 +57,24 @@ class Crawler:
         self.queue.put(domain)
 
         while True:
+            if self.seen_urls == self.done_urls and self.seen_urls != set():
+                return self.render_results()
+
             try:
                 url = self.queue.get(timeout=self.timeout)
             except queue.Empty:
-                return self.done_urls
+                return self.render_results()
 
             if url in self.done_urls:
                 continue
 
             self.crawl_url(url)
 
-        return self.done_urls
+        return self.render_results()
+
+    def render_results(self):
+        results = {str(url) for url in self.done_urls}
+        self.queue = queue.Queue()
+        self.seen_urls = set()
+        self.done_urls = set()
+        return results

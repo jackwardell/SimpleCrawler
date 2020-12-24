@@ -11,4 +11,4 @@ def test_crawler(server):
     urls_to_find = make_hyperlink_collection(
         [make_hyperlink(url) for url in ["/", "/hello", "/hello/world", "/world"]]
     ).join_all(server.url)
-    assert found_urls == set(urls_to_find)
+    assert found_urls == {str(url) for url in urls_to_find}

@@ -17,7 +17,8 @@ def crawl(url, user_agent, timeout, check_head, debug):
     crawler = Crawler(user_agent=user_agent, timeout=timeout, check_head=check_head)
 
     if debug is False:
-        crawler.crawl(url)
+        results = crawler.crawl(url)
+        click.echo(f"Found: {results}")
 
     else:
         click.echo("Debug mode is on: crawling not running")
