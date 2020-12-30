@@ -6,6 +6,11 @@
 
 * Python required (3.6+) https://www.python.org/downloads/
 * `git clone https://github.com/jackwardell/WebCrawler.git`
+* `cd WebCrawler`
+* `python3 -m venv venv`
+* `source venv/bin/activate`
+* `pip install --upgrade pip`
+* `pip install -r requirements.txt`
 * `pip install -e .`
 
 # Use
