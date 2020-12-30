@@ -62,6 +62,11 @@ class Crawler:
         self._seen_urls = make_hyperlink_set()
         self._done_urls = make_hyperlink_set()
 
+        # todo elements: could allow recording of redirects, client errors & server errors
+        self.record_redirects = False
+        # self.record_client_errors = False
+        # self.record_server_errors = False
+
     @property
     def config(self) -> dict:
         rv = {
@@ -86,8 +91,18 @@ class Crawler:
 
     def _get_hrefs(self, url: Hyperlink) -> HyperlinkSet:
         """get hrefs from url with requester"""
-        resp = self._requester(url, check_head_first=self.check_head)
-        return get_hrefs_from_html(resp.text)
+        resp = self._requester(
+            url,
+            check_head_first=self.check_head,
+            follow_redirects=(not self.record_redirects),
+        )
+
+        if self.record_redirects and str(resp.status_code).startswith("3"):
+            hrefs = make_hyperlink_set([make_hyperlink(resp.headers["Location"])])
+        else:
+            hrefs = get_hrefs_from_html(resp.text)
+
+        return hrefs
 
     def _parse_hrefs(self, hrefs: HyperlinkSet, url: Hyperlink) -> HyperlinkSet:
         """parse the hrefs from collection and by trimming, joining, filtering and deduping"""
@@ -96,6 +111,7 @@ class Crawler:
             .join_all(url)
             .filter_by(authority=url.authority)
         )
+
         return hrefs
 
     def _crawl_url(self, url: Hyperlink) -> None:

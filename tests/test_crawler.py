@@ -2,13 +2,19 @@ import mimetypes
 
 import pytest
 from flask import abort
+from flask import jsonify
+from flask import redirect
 from flask import request
 
 from tests.conftest import make_html_from_links
 from web_crawler.crawler import Crawler
+from web_crawler.crawler import DEFAULT_USER_AGENT
 from web_crawler.crawler import NoThreadExecutor
 from web_crawler.hyperlink import make_hyperlink
 from web_crawler.hyperlink import make_hyperlink_set
+from web_crawler.requester import ClientError
+from web_crawler.requester import ServerError
+from web_crawler.requester import WrongMIMEType
 
 
 def some_func(*args, **kwargs):
@@ -106,6 +112,44 @@ def test_crawler_executor(crawler):
         assert some_func(ARGS, KWARGS) == e.submit(some_func, ARGS, KWARGS)
 
 
+@pytest.mark.parametrize(
+    "record_redirects, found_link", [(False, "/example"), (True, "{host}/world")]
+)
+def test_crawler_get_hrefs(server, crawler, record_redirects, found_link):
+    @server.app.route("/hello")
+    def hello():
+        return redirect("/world")
+
+    @server.app.route("/world")
+    def world():
+        return "<html><body><a href='/example'></a></body></html>"
+
+    crawler.record_redirects = record_redirects
+
+    found_link = found_link.format(host=server.url)
+
+    with server.run():
+        assert crawler._get_hrefs(server.href + "/hello") == make_hyperlink_set([found_link])
+
+
+@pytest.mark.parametrize(
+    "code, exc, func",
+    [
+        (404, ClientError, abort),
+        (500, ServerError, abort),
+        (200, WrongMIMEType, jsonify),
+    ],
+)
+def test_crawler_get_hrefs_fails(server, crawler, code, exc, func):
+    @server.app.route("/error")
+    def error():
+        return func(status=code)
+
+    with server.run():
+        with pytest.raises(exc):
+            crawler._get_hrefs(server.href / "error")
+
+
 def test_crawler_parse_hrefs(crawler):
     host_link = make_hyperlink("https://www.example.com")
     links = [
@@ -150,8 +194,38 @@ def test_crawler_crawl_url(server, crawler):
         assert crawler._done_urls == make_hyperlink_set([server.href / "hello"])
 
 
-def test_crawler_crawl_url_fails(server, crawler):
-    crawler.record_client_errors = True
+@pytest.mark.parametrize(
+    "user_agent, allow, disallow, delay",
+    [
+        (DEFAULT_USER_AGENT, ["/this/"], ["/hello"], 10),
+        ("Tester", ["/this/", "/that/"], ["/hello", "/world"], 1),
+    ],
+)
+def test_crawler_get_robots(server, crawler, user_agent, allow, disallow, delay):
+    @server.app.route("/robots.txt")
+    def robots_txt():
+        allows = "\n".join([f"Allow: {a}" for a in allow])
+        disallows = "\n".join([f"Disallow: {d}" for d in disallow])
+        txt = f"""
+        User-agent: {user_agent}
+        {allows}
+        {disallows}
+        Crawl-delay: {delay}
+
+        User-agent: NotAnyOtherAgent
+        Disallow: /
+        """
+        return txt, 200, {"Content-Type": "text/plain; charset=utf-8"}
+
+    with server.run():
+        robots = crawler._get_robots(server.href / "robots.txt")
+        for a in allow:
+            assert robots.can_fetch(user_agent, a) is True
+        for d in disallow:
+            assert robots.can_fetch(user_agent, d) is False
+        assert robots.crawl_delay(user_agent) == delay
+
+        assert robots.can_fetch("NotAnyOtherAgent", "/") is False
 
 
 def test_crawler_crawl_find_all_links(server, crawler):

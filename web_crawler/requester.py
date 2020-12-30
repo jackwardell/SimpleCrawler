@@ -42,20 +42,29 @@ class Requester:
         if user_agent is not None:
             self.session.headers["User-Agent"] = self.user_agent
 
-    def request(self, method: str, url: Hyperlink, mime_types: Iterable) -> requests.Response:
+    def request(
+        self,
+        method: str,
+        url: Hyperlink,
+        mime_types: Iterable,
+        follow_redirects: bool = True,
+    ) -> requests.Response:
         """
         wrapper function around requests.request that handles some internal logic
 
         :param method: (str) GET, HEAD, etc (any HTTP method)
         :param url: (Hyperlink) a link to ping
         :param mime_types: (Iterable) a selection of mime-types that are acceptable
+        :param follow_redirects (bool) whether or not to follow redirects
         :return: (str) the response text (e.g. the html)
 
         :raises: ClientError if 4xx from response
         :raises: ServerError if 5xx from response
         :raises: MimeTypeError if response MIME type doesn't match mime_types param
         """
-        response = self.session.request(method, str(url), timeout=(2, 15))
+        response = self.session.request(
+            method, str(url), timeout=(2, 15), allow_redirects=follow_redirects
+        )
 
         if str(response.status_code).startswith("4"):
             raise ClientError(f"{response.status_code} {response.reason}")
@@ -74,6 +83,7 @@ class Requester:
         url: Hyperlink,
         mime_types: Iterable = ("text/html",),
         check_head_first: bool = True,
+        follow_redirects: bool = True,
     ) -> requests.Response:
         """
         wrapper around self.request that allows the class to be callable
@@ -82,6 +92,7 @@ class Requester:
         :param url: (Hyperlink) url to go ping
         :param mime_types: (Iterable) acceptable mime types for response, defaults to "text/html"
         :param check_head_first: (bool) whether make a HEAD HTTP request before GET to see if mime type is acceptable
+        :param follow_redirects (bool) whether or not to follow redirects
         :return: (str) the text
 
         :raises: ClientError if 4xx from response
@@ -89,6 +100,6 @@ class Requester:
         :raises: MimeTypeError if response MIME type doesn't match mime_types param
         """
         if check_head_first:
-            self.request("HEAD", url, mime_types)
+            self.request("HEAD", url, mime_types, follow_redirects=follow_redirects)
 
-        return self.request("GET", url, mime_types)
+        return self.request("GET", url, mime_types, follow_redirects=follow_redirects)

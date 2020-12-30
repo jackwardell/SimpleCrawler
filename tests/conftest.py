@@ -46,9 +46,11 @@ class WebServer:
         webserver = make_server(self.HOST, self.PORT, self.app, threaded=True)
         thread = threading.Thread(target=webserver.serve_forever, daemon=True)
         thread.start()
-        yield self
-        webserver.shutdown()
-        thread.join()
+        try:
+            yield self
+        finally:
+            webserver.shutdown()
+            thread.join()
 
     @property
     def url(self):
