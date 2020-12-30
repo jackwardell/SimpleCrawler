@@ -1,10 +1,10 @@
-# WebCrawler
+# SimpleCrawler
 * This web crawler can be used to crawl a website from the command line or code
 
 # Install
 * Python required (3.6+) https://www.python.org/downloads/
-* `git clone https://github.com/jackwardell/WebCrawler.git`
-* `cd WebCrawler`
+* `git clone https://github.com/jackwardell/SimpleCrawler.git`
+* `cd SimpleCrawler`
 * `python3 -m venv venv`
 * `source venv/bin/activate`
 * `pip install --upgrade pip`
@@ -74,3 +74,13 @@ Options:
     - "--debug/--no-debug", default=False
         - whether to run the crawl, if debug on, then it wont crawl but will pump out crawler config
         - default = False
+
+
+OR from code
+
+```
+from simple_crawler import Crawler
+
+crawler = Crawler()
+found_links = crawler.crawl('https://www.example.com/')
+```
