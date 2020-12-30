@@ -5,7 +5,7 @@ from web_crawler.hyperlink import make_hyperlink_set
 
 
 @pytest.mark.parametrize(
-    "input_link_and_output_result",
+    "input_link, output_result",
     [
         ("/", "/"),
         (".", "/"),
@@ -34,14 +34,13 @@ from web_crawler.hyperlink import make_hyperlink_set
         ),
     ],
 )
-def test_hyperlink(input_link_and_output_result):
-    input_link, output_result = input_link_and_output_result
+def test_hyperlink(input_link, output_result):
     href = make_hyperlink(input_link)
     assert str(href) == output_result
 
 
 @pytest.mark.parametrize(
-    "input_link_and_output_result",
+    "input_link, is_absolute_link",
     [
         ("/", False),
         (".", False),
@@ -64,15 +63,14 @@ def test_hyperlink(input_link_and_output_result):
         ("https://www.example.com/?hello=world", True),
     ],
 )
-def test_hyperlink_is_absolute_or_relative(input_link_and_output_result):
-    input_link, output_result = input_link_and_output_result
+def test_hyperlink_is_absolute_or_relative(input_link, is_absolute_link):
     href = make_hyperlink(input_link)
-    assert href.is_absolute is output_result
-    assert href.is_relative is not output_result
+    assert href.is_absolute == is_absolute_link
+    assert href.is_relative != is_absolute_link
 
 
 @pytest.mark.parametrize(
-    "input_link_and_output_result",
+    "input_link, output_result",
     [
         ("/", "/"),
         (".", "/"),
@@ -87,15 +85,14 @@ def test_hyperlink_is_absolute_or_relative(input_link_and_output_result):
         ("/?hello=world", "/?hello=world"),
     ],
 )
-def test_hyperlink_join_with_relative_links(input_link_and_output_result):
-    input_link, output_result = input_link_and_output_result
+def test_hyperlink_join_with_relative_links(input_link, output_result):
     href = make_hyperlink(input_link)
     domain = "https://helloworld.com"
     assert str(href.join(domain)) == domain + output_result
 
 
 @pytest.mark.parametrize(
-    "input_link_and_output_result",
+    "input_link, output_result",
     [
         ("https://www.example.com/", "https://www.example.com/"),
         ("https://www.example.com.", "https://www.example.com/"),
@@ -113,15 +110,14 @@ def test_hyperlink_join_with_relative_links(input_link_and_output_result):
         ),
     ],
 )
-def test_hyperlink_join_with_absolute_links(input_link_and_output_result):
-    input_link, output_result = input_link_and_output_result
+def test_hyperlink_join_with_absolute_links(input_link, output_result):
     href = make_hyperlink(input_link)
     domain = "https://helloworld.com"
     assert str(href.join(domain)) == output_result
 
 
 @pytest.mark.parametrize(
-    "input_link_and_output_result",
+    "input_link, output_result",
     [
         ("/ hello world", "/%20hello%20world"),
         ("/example!@£$%^&*()", "/example%21%40%C2%A3%24%%5E%26%2A%28%29"),
@@ -137,8 +133,7 @@ def test_hyperlink_join_with_absolute_links(input_link_and_output_result):
         ("/?world=hello&hello=world", "/?hello=world&world=hello"),
     ],
 )
-def test_hyperlink_normalisation(input_link_and_output_result):
-    input_link, output_result = input_link_and_output_result
+def test_hyperlink_normalisation(input_link, output_result):
     assert make_hyperlink(input_link).url == output_result
 
 
@@ -162,30 +157,15 @@ def test_hyperlink_set_behaves_like_set():
     assert found == hrefs.collection
 
 
-# @pytest.mark.parametrize(
-#     "input_and_output_links",
-#     [
-#         (["/"], ["/"]),
-#         (["/", "/"], ["/"]),
-#         (["/hello", "/hello", "/hello", "/world"], ["/hello", "/world"]),
-#     ],
-# )
-# def test_hyperlink_set_dedupe(input_and_output_links):
-#     input_links, output_links = input_and_output_links
-#     links = make_hyperlink_set(input_links)
-#     assert links.dedupe() == make_hyperlink_set(output_links)
-
-
 @pytest.mark.parametrize(
-    "input_and_output",
+    "input_links, output_links",
     [
         (["/", "/"], ["/", "/"]),
         (["hello", "world"], ["/hello", "/world"]),
         (["www.example.com"], ["/www.example.com"]),
     ],
 )
-def test_hyperlink_set_relative_links_join_all(input_and_output):
-    input_links, output_links = input_and_output
+def test_hyperlink_set_relative_links_join_all(input_links, output_links):
     links = make_hyperlink_set(input_links)
     domain = "https://www.google.com"
     assert links.join_all(domain) == make_hyperlink_set(
@@ -194,7 +174,7 @@ def test_hyperlink_set_relative_links_join_all(input_and_output):
 
 
 @pytest.mark.parametrize(
-    "input_and_output",
+    "input_links, output_links",
     [
         (["https://www.google.com/"], ["https://www.google.com/"]),
         (
@@ -204,15 +184,14 @@ def test_hyperlink_set_relative_links_join_all(input_and_output):
         (["http://www.example.com"], ["http://www.example.com"]),
     ],
 )
-def test_hyperlink_set_absolute_links_join_all(input_and_output):
-    input_links, output_links = input_and_output
+def test_hyperlink_set_absolute_links_join_all(input_links, output_links):
     links = make_hyperlink_set(input_links)
     domain = "https://www.google.com"
     assert links.join_all(domain) == make_hyperlink_set(output_links)
 
 
 @pytest.mark.parametrize(
-    "fields_and_input_links_and_output_links",
+    "fields, input_links, output_links",
     [
         (
             ("scheme", "http"),
@@ -285,20 +264,16 @@ def test_hyperlink_set_absolute_links_join_all(input_and_output):
         ),
     ],
 )
-def test_hyperlink_set_filter_by(fields_and_input_links_and_output_links):
-    fields, input_links, output_links = fields_and_input_links_and_output_links
-
+def test_hyperlink_set_filter_by(fields, input_links, output_links):
     input_hrefs = make_hyperlink_set(input_links)
     k, v = fields
     filtered_hrefs = input_hrefs.filter_by(**{k: v})
-
     output_hrefs = make_hyperlink_set(output_links)
-
     assert filtered_hrefs == output_hrefs
 
 
 @pytest.mark.parametrize(
-    "fields_and_input_links_and_output_links",
+    "fields, input_links, output_links",
     [
         (
             {"scheme": "http", "authority": "www.example.com"},
@@ -381,14 +356,8 @@ def test_hyperlink_set_filter_by(fields_and_input_links_and_output_links):
         ),
     ],
 )
-def test_hyperlink_set_filter_by_mutli_kwargs(
-    fields_and_input_links_and_output_links,
-):
-    fields, input_links, output_links = fields_and_input_links_and_output_links
-
+def test_hyperlink_set_filter_by_mutli_kwargs(fields, input_links, output_links):
     input_hrefs = make_hyperlink_set(input_links)
     filtered_hrefs = input_hrefs.filter_by(**fields)
-
     output_hrefs = make_hyperlink_set(output_links)
-
     assert filtered_hrefs == output_hrefs

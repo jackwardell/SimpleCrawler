@@ -118,25 +118,6 @@ class Hyperlink:
         resolution = urllib.parse.urljoin(base_url._input_url, self._input_url)
         return make_hyperlink(resolution)
 
-    # @classmethod
-    # def make(cls, link: str):
-    #     """
-    #     factory method for creating Hyperlinks
-    #
-    #     :param link: (str) any link/uri
-    #     :return: (Hyperlink) an instance of hyperlink
-    #     """
-    #     if isinstance(link, cls):
-    #         return link
-    #
-    #     if not isinstance(link, str):
-    #         raise TypeError("href links need to be strings")
-    #
-    #     return cls(link)
-
-
-# make_hyperlink = Hyperlink.make
-
 
 def make_hyperlink(link: Union[str, Hyperlink]) -> Hyperlink:
     """
@@ -165,9 +146,6 @@ class HyperlinkSet:
     def __len__(self):
         return len(self.collection)
 
-    # def __getitem__(self, item):
-    #     return self.collection[item]
-
     def __iter__(self):
         return iter(self.collection)
 
@@ -194,15 +172,6 @@ class HyperlinkSet:
 
     def is_not_empty(self):
         return not self.is_empty()
-
-    # def dedupe(self):
-    #     """
-    #     remove all dupes and then create new instance of self
-    #
-    #     :return: new instance of HyperlinkReferenceCollection that is deduped
-    #     """
-    #     # quickest way to dedupe while retaining order
-    #     return HyperlinkSet(list(dict.fromkeys(self.collection)))
 
     def join_all(self, base_url: Union[str, Hyperlink]):
         """
@@ -234,26 +203,6 @@ class HyperlinkSet:
 
     def trim(self, **kwargs):
         return HyperlinkSet({href.trim(**kwargs) for href in self.collection})
-
-    # @classmethod
-    # def make(cls, links: set = None):
-    #     """
-    #     factory method for creating Hyperlinks
-    #
-    #     :param links: (list) any list of link/uri
-    #     :return: (HyperlinkCollection) an instance of hyperlink collection
-    #     """
-    #     if links is None:
-    #         return cls()
-    #
-    #     if not isinstance(links, set):
-    #         raise TypeError("href links needs to be a list")
-    #
-    #     for link in links:
-    #         if not isinstance(link, Hyperlink):
-    #             raise TypeError("links must all be Hyperlink objects")
-    #
-    #     return cls(links)
 
 
 def make_hyperlink_set(links: Iterable = None) -> HyperlinkSet:

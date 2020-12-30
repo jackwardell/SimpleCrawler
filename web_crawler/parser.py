@@ -42,13 +42,11 @@ class AnchorTagParser(HTMLParser):
 def get_hrefs_from_html(html: str) -> HyperlinkSet:
     """
     * This function will find all <a> tags in a HTML snippet (via `AnchorTagParser`)
-    * It will grab all href attributes in the <a> tags (as `HyperlinkReference` objects)
-    * If unique=True, it will remove duplicate HyperlinkReference (`via dict.from_keys`)
-    * It will return a list of HyperlinkReference objects
+    * It will grab all href attributes in the <a> tags (as `Hyperlink` objects)
+    * It will return a HyperlinkSet object
 
     :param html: (str) a html snippet
-    :param unique: (bool) whether the retuning list should include duplicate hrefs
-    :return: (list) a list of links found in all href attributes
+    :return: (HyperlinkSet) a set of links found in all href attributes
     """
     parser = AnchorTagParser()
     parser.feed(html)
