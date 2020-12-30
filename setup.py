@@ -28,6 +28,7 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Natural Language :: English",
@@ -37,5 +38,5 @@ setup(
         "console_scripts": ["crawl=web_crawler.cli:crawl"],
     },
     keywords="python",
-    python_requires=">=3.5",
+    python_requires=">=3.6",
 )
