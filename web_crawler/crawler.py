@@ -41,6 +41,8 @@ class Crawler:
         timeout: int = 10,
         obey_robots: bool = True,
         check_head: bool = False,
+        trim_query: bool = True,
+        trim_fragment: bool = True,
     ):
         # config elements
         self.user_agent = user_agent
@@ -48,14 +50,27 @@ class Crawler:
         self.timeout = timeout
         self.obey_robots = obey_robots
         self.check_head = check_head
-        self.trim_query = True
-        self.trim_fragment = True
+        self.trim_query = trim_query
+        self.trim_fragment = trim_fragment
 
         # setup internal elements
         self._requester = Requester(user_agent=user_agent, session=session)
         self._queue = queue.Queue()
         self._seen_urls = make_hyperlink_set()
         self._done_urls = make_hyperlink_set()
+
+    @property
+    def config(self) -> dict:
+        rv = {
+            "user_agent": self.user_agent,
+            "max_workers": self.max_workers,
+            "timeout": self.timeout,
+            "obey_robots": self.obey_robots,
+            "check_head": self.check_head,
+            "trim_query": self.trim_query,
+            "trim_fragment": self.trim_fragment,
+        }
+        return rv
 
     def executor(self):
         """executor for multi-threaded execution or same script execution if workers=1"""
