@@ -1,8 +1,13 @@
 import logging
 import threading
+from contextlib import contextmanager
+from typing import Iterable
 
 import pytest
 from flask import Flask
+from werkzeug.serving import make_server
+
+from web_crawler.hyperlink import make_hyperlink
 
 
 def make_html(body: str) -> str:
@@ -15,53 +20,46 @@ def make_a_tag(path: str) -> str:
     return f'<a href="{path}">another link</a>'
 
 
-def make_a_tags(paths: list) -> str:
+def make_a_tags(paths: Iterable[str]) -> str:
     """make multiple <a> tags (via `make_a_tag`) seperated by <br> tags"""
     return "<br>".join([make_a_tag(path) for path in paths])
+
+
+def make_html_from_links(paths: Iterable[str]) -> str:
+    """make a html doc from a list of a tags"""
+    return make_html(make_a_tags(paths))
 
 
 log = logging.getLogger("werkzeug")
 log.setLevel(logging.ERROR)
 
 
-class WebServer(threading.Thread):
+class WebServer:
     HOST = "0.0.0.0"
     PORT = 9999
 
     def __init__(self, app):
-        super(WebServer, self).__init__(
-            target=app.run, kwargs={"host": self.HOST, "port": self.PORT}, daemon=True
-        )
+        self.app = app
+
+    @contextmanager
+    def run(self):
+        webserver = make_server(self.HOST, self.PORT, self.app, threaded=True)
+        thread = threading.Thread(target=webserver.serve_forever, daemon=True)
+        thread.start()
+        yield self
+        webserver.shutdown()
+        thread.join()
 
     @property
     def url(self):
         return f"http://{self.HOST}:{self.PORT}"
 
+    @property
+    def href(self):
+        return make_hyperlink(self.url)
 
-@pytest.fixture(scope="module")
+
+@pytest.fixture(scope="function")
 def server():
     app = Flask("test")
-
-    @app.route("/")
-    def index():
-        tags = ["/", "/hello", "/world"]
-        return make_html(make_a_tags(tags))
-
-    @app.route("/hello")
-    def hello():
-        tags = ["/", "/hello/world", "/world"]
-        return make_html(make_a_tags(tags))
-
-    @app.route("/hello/world")
-    def hello_world():
-        tags = ["/", "/hello"]
-        return make_html(make_a_tags(tags))
-
-    @app.route("/world")
-    def world():
-        tags = ["/", "/hello", "/world"]
-        return make_html(make_a_tags(tags))
-
-    threaded_webserver = WebServer(app)
-
-    return threaded_webserver
+    return WebServer(app)

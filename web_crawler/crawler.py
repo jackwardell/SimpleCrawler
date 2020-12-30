@@ -1,11 +1,14 @@
 import queue
 import time
 from concurrent.futures import ThreadPoolExecutor
+from typing import Set
+from typing import Union
 from urllib.robotparser import RobotFileParser
 
 from requests import Session
 
 from web_crawler.hyperlink import Hyperlink
+from web_crawler.hyperlink import HyperlinkSet
 from web_crawler.hyperlink import make_hyperlink
 from web_crawler.hyperlink import make_hyperlink_set
 from web_crawler.parser import get_hrefs_from_html
@@ -54,7 +57,7 @@ class Crawler:
         self.trim_fragment = trim_fragment
 
         # setup internal elements
-        self._requester = Requester(user_agent=user_agent, session=session)
+        self._requester = Requester(user_agent=self.user_agent, session=session)
         self._queue = queue.Queue()
         self._seen_urls = make_hyperlink_set()
         self._done_urls = make_hyperlink_set()
@@ -72,7 +75,7 @@ class Crawler:
         }
         return rv
 
-    def executor(self):
+    def _executor(self) -> Union[ThreadPoolExecutor, NoThreadExecutor]:
         """executor for multi-threaded execution or same script execution if workers=1"""
         executor = (
             ThreadPoolExecutor(max_workers=self.max_workers)
@@ -81,17 +84,26 @@ class Crawler:
         )
         return executor
 
-    def crawl_url(self, url: Hyperlink):
+    def _get_hrefs(self, url: Hyperlink) -> HyperlinkSet:
+        """get hrefs from url with requester"""
+        resp = self._requester(url, check_head_first=self.check_head)
+        return get_hrefs_from_html(resp.text)
+
+    def _parse_hrefs(self, hrefs: HyperlinkSet, url: Hyperlink) -> HyperlinkSet:
+        """parse the hrefs from collection and by trimming, joining, filtering and deduping"""
+        hrefs = (
+            hrefs.trim(query=self.trim_query, fragment=self.trim_fragment)
+            .join_all(url)
+            .filter_by(authority=url.authority)
+        )
+        return hrefs
+
+    def _crawl_url(self, url: Hyperlink) -> None:
         """crawl any url for all the other urls (in <a hrefs=url> tags)"""
         print(f"crawling {url}")
         try:
-            resp = self._requester(url, check_head_first=self.check_head)
-            hrefs = get_hrefs_from_html(resp.text)
-            hrefs = (
-                hrefs.trim(query=self.trim_query, fragment=self.trim_fragment)
-                .join_all(url)
-                .filter_by(authority=url.authority)
-            )
+            hrefs = self._get_hrefs(url)
+            hrefs = self._parse_hrefs(hrefs, url)
             for href in hrefs:
                 if href not in self._seen_urls:
                     self._queue.put(href)
@@ -106,7 +118,7 @@ class Crawler:
             print(f"{exc} on {url}")
             self._done_urls.add(url)
 
-    def get_robots(self, domain: Hyperlink) -> RobotFileParser:
+    def _get_robots(self, domain: Hyperlink) -> RobotFileParser:
         """get the robots.txt from any domain"""
         robots_url = domain.with_path("/robots.txt")
         robots = RobotFileParser(str(robots_url))
@@ -119,26 +131,26 @@ class Crawler:
 
         return robots
 
-    def crawl(self, domain: str):
+    def crawl(self, domain: str) -> Set[str]:
         """crawl any site for all urls"""
         domain = make_hyperlink(domain)
         self._queue.put(domain)
 
-        robots = self.get_robots(domain)
+        robots = self._get_robots(domain)
 
-        with self.executor() as executor:
+        with self._executor() as executor:
             while True:
                 # exit if we have crawled all urls found
                 if self._seen_urls == self._done_urls and self._seen_urls.is_not_empty():
                     # return results
-                    return self.render_results()
+                    return self._render_results()
 
                 # wait for more urls to enter queue or return if we timeout
                 try:
                     url = self._queue.get(timeout=self.timeout)
                 except queue.Empty:
                     # return results
-                    return self.render_results()
+                    return self._render_results()
 
                 # if the url has been done start flow again
                 if url in self._done_urls:
@@ -156,9 +168,9 @@ class Crawler:
                         time.sleep(delay)
 
                 # submit crawl_url to executor
-                executor.submit(self.crawl_url, url)
+                executor.submit(self._crawl_url, url)
 
-    def render_results(self):
+    def _render_results(self) -> Set[str]:
         """render all urls as a set of strings and reset crawler"""
         results = {str(url) for url in self._done_urls}
         self._queue = queue.Queue()
