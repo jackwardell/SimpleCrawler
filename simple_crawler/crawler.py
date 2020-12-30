@@ -139,9 +139,13 @@ class Crawler:
 
     def _crawl_url(self, url: Hyperlink) -> None:
         """crawl any url for all the other urls (in <a hrefs=url> tags)"""
-        print(f"crawling {url}")
+        print(f"CRAWLING: {url}")
         try:
             hrefs = self._get_hrefs(url)
+            print(f"VISITED: {url}")
+            for href in hrefs:
+                print(f"FOUND: {href} ON {url}")
+
             hrefs = self._parse_hrefs(hrefs, url)
             for href in hrefs:
                 if href not in self._seen_urls:
@@ -151,10 +155,10 @@ class Crawler:
             self._done_urls.add(url)
 
         except (ClientError, ServerError) as exc:
-            print(f"{exc} on {url}")
+            print(f"ERROR: {exc} ON {url}")
 
-        except WrongMIMEType as exc:
-            print(f"{exc} on {url}")
+        except WrongMIMEType:
+            print(f"VISITED: {url}")
             self._done_urls.add(url)
 
     def _get_robots(self, domain: Hyperlink) -> RobotFileParser:
@@ -164,11 +168,9 @@ class Crawler:
         try:
             resp = self._requester(robots_url, mime_types=("text/plain",))
             robots.parse(resp.text.splitlines())
-            print("found /robots.txt")
 
         except (ClientError, ServerError, WrongMIMEType):
             robots.parse("")
-            print("no /robots.txt")
 
         return robots
 

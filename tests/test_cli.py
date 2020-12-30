@@ -1,5 +1,6 @@
 import pytest
 from click.testing import CliRunner
+from flask import abort
 
 from simple_crawler.cli import crawl
 from simple_crawler.cli import DEFAULT_CHECK_HEAD
@@ -78,7 +79,9 @@ def test_crawl_options_debug(
 def test_crawl(server, runner):
     @server.app.route("/")
     def index():
-        return make_html_from_links(["/", "/hello", "/world", "/hello/world"])
+        return make_html_from_links(
+            ["/", "/hello", "/world", "/hello/world", "/error", "/hello.pdf"]
+        )
 
     @server.app.route("/hello")
     def hello():
@@ -92,11 +95,49 @@ def test_crawl(server, runner):
     def hello_world():
         return make_html_from_links(["/", "/hello", "/world", "/hello/world"])
 
+    @server.app.route("/error")
+    def error():
+        abort(500)
+
+    @server.app.route("/hello.pdf")
+    def pdf():
+        return "", 200, {"Content-Type": "text/pdf"}
+
     with server.run():
-        result = runner.invoke(crawl, [server.url])
+        result = runner.invoke(crawl, [server.url, "-t", "1"])
         assert result.exit_code == 0
         assert result.output.startswith("crawling URL: http://0.0.0.0:9999\n")
-        assert "crawling http://0.0.0.0:9999/\n" in result.output
-        assert "crawling http://0.0.0.0:9999/world\n" in result.output
-        assert "crawling http://0.0.0.0:9999/hello/world\n" in result.output
-        assert "crawling http://0.0.0.0:9999/hello\n" in result.output
+        assert "CRAWLING: http://0.0.0.0:9999/\n" in result.output
+        assert "CRAWLING: http://0.0.0.0:9999/world\n" in result.output
+        assert "CRAWLING: http://0.0.0.0:9999/hello/world\n" in result.output
+        assert "CRAWLING: http://0.0.0.0:9999/hello\n" in result.output
+
+        assert "VISITED: http://0.0.0.0:9999/\n" in result.output
+        assert "VISITED: http://0.0.0.0:9999/world\n" in result.output
+        assert "VISITED: http://0.0.0.0:9999/hello/world\n" in result.output
+        assert "VISITED: http://0.0.0.0:9999/hello\n" in result.output
+
+        assert "FOUND: / ON http://0.0.0.0:9999/\n" in result.output
+        assert "FOUND: /hello ON http://0.0.0.0:9999/\n" in result.output
+        assert "FOUND: /world ON http://0.0.0.0:9999/\n" in result.output
+        assert "FOUND: /hello/world ON http://0.0.0.0:9999/\n" in result.output
+        assert "FOUND: /error ON http://0.0.0.0:9999/\n" in result.output
+        assert "FOUND: /hello.pdf ON http://0.0.0.0:9999/\n" in result.output
+
+        assert "FOUND: / ON http://0.0.0.0:9999/hello\n" in result.output
+        assert "FOUND: /hello ON http://0.0.0.0:9999/hello\n" in result.output
+        assert "FOUND: /world ON http://0.0.0.0:9999/hello\n" in result.output
+        assert "FOUND: /hello/world ON http://0.0.0.0:9999/hello\n" in result.output
+
+        assert "FOUND: / ON http://0.0.0.0:9999/world\n" in result.output
+        assert "FOUND: /hello ON http://0.0.0.0:9999/world\n" in result.output
+        assert "FOUND: /world ON http://0.0.0.0:9999/world\n" in result.output
+        assert "FOUND: /hello/world ON http://0.0.0.0:9999/world\n" in result.output
+
+        assert "FOUND: / ON http://0.0.0.0:9999/hello/world\n" in result.output
+        assert "FOUND: /hello ON http://0.0.0.0:9999/hello/world\n" in result.output
+        assert "FOUND: /world ON http://0.0.0.0:9999/hello/world\n" in result.output
+        assert "FOUND: /hello/world ON http://0.0.0.0:9999/hello/world\n" in result.output
+
+        assert "ERROR: 500 Internal Server Error on http://0.0.0.0:9999/error\n"
+        assert "VISITED: http://0.0.0.0:9999/hello.pdf"
