@@ -1,11 +1,14 @@
 import click
 
 from web_crawler.crawler import Crawler
-from web_crawler.crawler import DEFAULT_CHECK_HEAD
-from web_crawler.crawler import DEFAULT_MAX_WORKERS
-from web_crawler.crawler import DEFAULT_OBEY_ROBOTS
-from web_crawler.crawler import DEFAULT_TIMEOUT
 from web_crawler.crawler import DEFAULT_USER_AGENT
+
+DEFAULT_MAX_WORKERS = 1
+DEFAULT_TIMEOUT = 10
+DEFAULT_CHECK_HEAD = False
+DEFAULT_DISOBEY_ROBOTS = True
+DEFAULT_WITH_QUERY = True
+DEFAULT_WITH_FRAGMENT = True
 
 
 @click.command()
@@ -14,29 +17,36 @@ from web_crawler.crawler import DEFAULT_USER_AGENT
 @click.option("-w", "--max-workers", default=DEFAULT_MAX_WORKERS)
 @click.option("-t", "--timeout", default=DEFAULT_TIMEOUT)
 @click.option("-h", "--check-head", is_flag=True, default=DEFAULT_CHECK_HEAD)
-@click.option("-o", "--obey-robots", is_flag=True, default=DEFAULT_OBEY_ROBOTS)
+@click.option("-d", "--disobey-robots", is_flag=True, default=DEFAULT_DISOBEY_ROBOTS)
+@click.option("-wq", "--with-query", is_flag=True, default=DEFAULT_WITH_QUERY)
+@click.option("-wf", "--with-fragment", is_flag=True, default=DEFAULT_WITH_FRAGMENT)
 @click.option("--debug/--no-debug", default=False)
-def crawl(url, user_agent, max_workers, timeout, check_head, obey_robots, debug):
-    click.echo(f"Crawling URL: {url}")
+def crawl(
+    url,
+    user_agent,
+    max_workers,
+    timeout,
+    check_head,
+    disobey_robots,
+    with_query,
+    with_fragment,
+    debug,
+):
+    click.echo(f"crawling URL: {url}")
     crawler = Crawler(
         user_agent=user_agent,
         max_workers=max_workers,
         timeout=timeout,
         check_head=check_head,
-        obey_robots=obey_robots,
+        obey_robots=(not disobey_robots),
+        trim_query=(not with_query),
+        trim_fragment=(not with_fragment),
     )
 
     if debug is False:
         crawler.crawl(url)
 
     else:
-        click.echo("Debug mode is on: crawling not running")
-        click.echo(f"crawler User-Agent: {crawler.user_agent}")
-        click.echo(f"crawler max workers: {crawler.max_workers}")
-        click.echo(f"crawler timeout: {crawler.timeout}")
-        click.echo(f"crawler check head: {crawler.check_head}")
-        click.echo(f"crawler obey robots: {crawler.obey_robots}")
-
-
-if __name__ == "__main__":
-    crawl()
+        click.echo("debug mode is on: crawling not running")
+        for k, v in crawler.config.items():
+            click.echo(f"{k.replace('_', ' ')}: {v}")
