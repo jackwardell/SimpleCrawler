@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from pathlib import Path
 
 from setuptools import find_packages
@@ -35,7 +34,7 @@ setup(
         "Intended Audience :: Developers",
     ],
     entry_points={
-        "console_scripts": ["crawl=web_crawler.cli:crawl"],
+        "console_scripts": ["crawl=simple_crawler.cli:crawl"],
     },
     keywords="python",
     python_requires=">=3.6",

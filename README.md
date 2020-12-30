@@ -3,6 +3,10 @@
 
 # Install
 * Python required (3.6+) https://www.python.org/downloads/
+* `pip install SimpleCrawler`
+
+OR
+
 * `git clone https://github.com/jackwardell/SimpleCrawler.git`
 * `cd SimpleCrawler`
 * `python3 -m venv venv`

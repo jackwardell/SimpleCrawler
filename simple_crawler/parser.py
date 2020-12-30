@@ -3,9 +3,9 @@ module for parsing HTML and getting out the links
 """
 from html.parser import HTMLParser
 
-from .hyperlink import HyperlinkSet
-from .hyperlink import make_hyperlink
-from .hyperlink import make_hyperlink_set
+from simple_crawler.hyperlink import HyperlinkSet
+from simple_crawler.hyperlink import make_hyperlink
+from simple_crawler.hyperlink import make_hyperlink_set
 
 
 class AnchorTagParser(HTMLParser):
