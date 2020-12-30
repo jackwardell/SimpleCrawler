@@ -178,6 +178,7 @@ class Crawler:
                 if self.obey_robots:
                     # start again if we can't fetch a url
                     if not robots.can_fetch(self.user_agent, str(url)):
+                        print(f"{self.user_agent} can't crawl {url}")
                         continue
 
                     # there is a bug in py3.6 https://bugs.python.org/issue35922
@@ -186,6 +187,7 @@ class Crawler:
                         # wait for delay if we can scrape but must crawl slowly
                         if robots.crawl_delay(self.user_agent):
                             delay = int(robots.crawl_delay(self.user_agent))
+                            print(f"{self.user_agent} has a delay of {delay}, waiting...")
                             time.sleep(delay)
                     except AttributeError:
                         pass
