@@ -253,3 +253,9 @@ def test_crawler_render_results(crawler):
     assert crawler._queue.empty()
     assert crawler._seen_urls == make_hyperlink_set()
     assert crawler._done_urls == make_hyperlink_set()
+
+
+def test_crawler_multi_threading(crawler_server):
+    crawler = Crawler(max_workers=10, timeout=1)
+    found_urls = crawler.crawl(crawler_server.url + "/")
+    assert found_urls == crawler_server.links
