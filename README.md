@@ -12,6 +12,22 @@
 
 * just type `crawl <url>` into your command line e.g. `crawl https://www.google.com`
 
+```
+$ crawl --help
+Usage: crawl [OPTIONS] URL
+
+Options:
+  -u, --user-agent TEXT
+  -w, --max-workers INTEGER
+  -t, --timeout INTEGER
+  -h, --check-head
+  -d, --disobey-robots
+  -wq, --with-query
+  -wf, --with-fragment
+  --debug / --no-debug
+  --help                     Show this message and exit.
+```
+
 * optional params:
     - "--user-agent" or "-u"
         - what the User-Agent header param is
