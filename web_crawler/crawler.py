@@ -1,3 +1,6 @@
+"""
+module for core software for crawling
+"""
 import queue
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -21,7 +24,7 @@ DEFAULT_USER_AGENT = "PyWebCrawler"
 
 
 class NoThreadExecutor:
-    """an executor that won't fire off any threads"""
+    """an executor that won't fire off any threads (used for when workers=1)"""
 
     def __enter__(self):
         return self
@@ -34,7 +37,27 @@ class NoThreadExecutor:
 
 
 class Crawler:
-    """simple multi threaded crawler"""
+    """
+    This the core component for crawling
+
+    How to use?
+        * crawler = Crawler(**some_config)
+        * found_urls = crawler.crawl(some_url)
+
+    It's that simple
+
+    :param user_agent: (str) name of the user agent, defaults to PyWebCrawler
+    :param session: (requests.Session) a session object in case user want their
+                    own with their own headers for instance
+    :param max_workers: (int) number of threads to spin up, when default as 1,
+                        there is NO threading
+    :param timeout: (int) length of time to wait for another url to be sent to
+                    the queue
+    :param obey_robots: (bool) should crawler obey robots.txt
+    :param check_head: (bool) should crawler check HEAD before GET
+    :param trim_query: (bool) should crawler remove ?query=strings from url
+    :param trim_fragment: (bool) should crawler remove #fragments from url
+    """
 
     def __init__(
         self,
@@ -136,7 +159,7 @@ class Crawler:
 
     def _get_robots(self, domain: Hyperlink) -> RobotFileParser:
         """get the robots.txt from any domain"""
-        robots_url = domain.with_path("/robots.txt")
+        robots_url = domain.with_path("robots.txt")
         robots = RobotFileParser(str(robots_url))
         try:
             resp = self._requester(robots_url, mime_types=("text/plain",))

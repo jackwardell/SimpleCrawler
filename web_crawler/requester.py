@@ -1,5 +1,5 @@
 """
-A service that handles getting text data
+module service that handles getting text data from web servers
 """
 from typing import Iterable
 

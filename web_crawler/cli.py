@@ -1,3 +1,6 @@
+"""
+cli application for crawler
+"""
 import click
 
 from web_crawler.crawler import Crawler
@@ -44,7 +47,10 @@ def crawl(
     )
 
     if debug is False:
-        crawler.crawl(url)
+        found_links = crawler.crawl(url)
+        click.echo(f"WHEN CRAWLING: {url} THE CRAWLER FOUND:")
+        for link in found_links:
+            click.echo(f"FOUND: {link}")
 
     else:
         click.echo("debug mode is on: crawling not running")

@@ -1,3 +1,6 @@
+"""
+module for parsing HTML and getting out the links
+"""
 from html.parser import HTMLParser
 
 from .hyperlink import HyperlinkSet

@@ -1,3 +1,6 @@
+"""
+module with components for url (link) manipulation
+"""
 import urllib.parse
 from typing import Iterable
 from typing import Union
