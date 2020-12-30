@@ -68,10 +68,10 @@ def test_crawl_options_debug(
         f"user agent: {user_agent[1] if user_agent[0] else DEFAULT_USER_AGENT}\n"
         f"max workers: {max_workers[1] if max_workers[0] else DEFAULT_MAX_WORKERS}\n"
         f"timeout: {timeout[1] if timeout[0] else DEFAULT_TIMEOUT}\n"
-        f"obey robots: {bool(disobey_robots)}\n"
+        f"obey robots: {not bool(disobey_robots)}\n"
         f"check head: {bool(check_head)}\n"
-        f"trim query: {bool(with_query)}\n"
-        f"trim fragment: {bool(with_fragment)}\n"
+        f"trim query: {not bool(with_query)}\n"
+        f"trim fragment: {not bool(with_fragment)}\n"
     )
 
 

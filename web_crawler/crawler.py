@@ -141,9 +141,11 @@ class Crawler:
         try:
             resp = self._requester(robots_url, mime_types=("text/plain",))
             robots.parse(resp.text.splitlines())
+            print("found /robots.txt")
 
         except (ClientError, ServerError, WrongMIMEType):
             robots.parse("")
+            print("no /robots.txt")
 
         return robots
 
