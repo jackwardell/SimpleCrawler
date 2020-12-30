@@ -27,6 +27,7 @@ This crawler will:
 * Get links from ONLY href value in <a href='/some-link'>click here</a> tags
 
 Todo:
+* Nicer logging
 * Crawl client errors and server error pages? (Most websites have 404 & 500 handlers which may have links)
 * Parse more than just <a> tags and href attrs e.g. src='/some-link'
 * Add a scheduler / wait frequency (Politeness)
