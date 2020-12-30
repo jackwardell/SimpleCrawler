@@ -10,15 +10,15 @@ from urllib.robotparser import RobotFileParser
 
 from requests import Session
 
-from web_crawler.hyperlink import Hyperlink
-from web_crawler.hyperlink import HyperlinkSet
-from web_crawler.hyperlink import make_hyperlink
-from web_crawler.hyperlink import make_hyperlink_set
-from web_crawler.parser import get_hrefs_from_html
-from web_crawler.requester import ClientError
-from web_crawler.requester import Requester
-from web_crawler.requester import ServerError
-from web_crawler.requester import WrongMIMEType
+from simple_crawler.hyperlink import Hyperlink
+from simple_crawler.hyperlink import HyperlinkSet
+from simple_crawler.hyperlink import make_hyperlink
+from simple_crawler.hyperlink import make_hyperlink_set
+from simple_crawler.parser import get_hrefs_from_html
+from simple_crawler.requester import ClientError
+from simple_crawler.requester import Requester
+from simple_crawler.requester import ServerError
+from simple_crawler.requester import WrongMIMEType
 
 DEFAULT_USER_AGENT = "PyWebCrawler"
 

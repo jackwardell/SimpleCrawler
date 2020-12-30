@@ -5,7 +5,7 @@ from typing import Iterable
 
 import requests
 
-from web_crawler.hyperlink import Hyperlink
+from simple_crawler.hyperlink import Hyperlink
 
 
 class RequesterError(Exception):

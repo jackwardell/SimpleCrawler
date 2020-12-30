@@ -4,14 +4,14 @@ from pathlib import Path
 from setuptools import find_packages
 from setuptools import setup
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 ROOT_DIR = Path(".")
 
 with open(str(ROOT_DIR / "README.md")) as readme:
     long_description = readme.read()
 
 setup(
-    name="WebCrawler",
+    name="SimpleCrawler",
     version=__version__,
     packages=find_packages(),
     include_package_data=True,
@@ -39,4 +39,5 @@ setup(
     },
     keywords="python",
     python_requires=">=3.6",
+    install_requires=["requests", "click"],
 )

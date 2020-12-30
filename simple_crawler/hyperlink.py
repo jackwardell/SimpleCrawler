@@ -5,13 +5,13 @@ import urllib.parse
 from typing import Iterable
 from typing import Union
 
-from web_crawler.url_normalisation import normalise_authority
-from web_crawler.url_normalisation import normalise_fragment
-from web_crawler.url_normalisation import normalise_kwargs
-from web_crawler.url_normalisation import normalise_path
-from web_crawler.url_normalisation import normalise_query
-from web_crawler.url_normalisation import normalise_scheme
-from web_crawler.url_normalisation import normalise_url
+from simple_crawler.url_normalisation import normalise_authority
+from simple_crawler.url_normalisation import normalise_fragment
+from simple_crawler.url_normalisation import normalise_kwargs
+from simple_crawler.url_normalisation import normalise_path
+from simple_crawler.url_normalisation import normalise_query
+from simple_crawler.url_normalisation import normalise_scheme
+from simple_crawler.url_normalisation import normalise_url
 
 
 class Hyperlink:

@@ -7,7 +7,7 @@ import pytest
 from flask import Flask
 from werkzeug.serving import make_server
 
-from web_crawler.hyperlink import make_hyperlink
+from simple_crawler.hyperlink import make_hyperlink
 
 
 def make_html(body: str) -> str:

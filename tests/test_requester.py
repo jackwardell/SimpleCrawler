@@ -2,11 +2,11 @@ import pytest
 from flask import abort
 from flask import Flask
 
+from simple_crawler.requester import ClientError
+from simple_crawler.requester import Requester
+from simple_crawler.requester import ServerError
+from simple_crawler.requester import WrongMIMEType
 from tests.conftest import WebServer
-from web_crawler.requester import ClientError
-from web_crawler.requester import Requester
-from web_crawler.requester import ServerError
-from web_crawler.requester import WrongMIMEType
 
 USER_AGENT = "TestAgent"
 

@@ -1,12 +1,12 @@
 import pytest
 
+from simple_crawler.hyperlink import make_hyperlink
+from simple_crawler.hyperlink import make_hyperlink_set
+from simple_crawler.parser import AnchorTagParser
+from simple_crawler.parser import get_hrefs_from_html
 from tests.conftest import make_a_tag
 from tests.conftest import make_a_tags
 from tests.conftest import make_html
-from web_crawler.hyperlink import make_hyperlink
-from web_crawler.hyperlink import make_hyperlink_set
-from web_crawler.parser import AnchorTagParser
-from web_crawler.parser import get_hrefs_from_html
 
 
 @pytest.mark.parametrize(

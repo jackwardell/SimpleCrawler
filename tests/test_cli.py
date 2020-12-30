@@ -1,15 +1,15 @@
 import pytest
 from click.testing import CliRunner
 
+from simple_crawler.cli import crawl
+from simple_crawler.cli import DEFAULT_CHECK_HEAD
+from simple_crawler.cli import DEFAULT_DISOBEY_ROBOTS
+from simple_crawler.cli import DEFAULT_MAX_WORKERS
+from simple_crawler.cli import DEFAULT_TIMEOUT
+from simple_crawler.cli import DEFAULT_WITH_FRAGMENT
+from simple_crawler.cli import DEFAULT_WITH_QUERY
+from simple_crawler.crawler import DEFAULT_USER_AGENT
 from tests.conftest import make_html_from_links
-from web_crawler.cli import crawl
-from web_crawler.cli import DEFAULT_CHECK_HEAD
-from web_crawler.cli import DEFAULT_DISOBEY_ROBOTS
-from web_crawler.cli import DEFAULT_MAX_WORKERS
-from web_crawler.cli import DEFAULT_TIMEOUT
-from web_crawler.cli import DEFAULT_WITH_FRAGMENT
-from web_crawler.cli import DEFAULT_WITH_QUERY
-from web_crawler.crawler import DEFAULT_USER_AGENT
 
 
 @pytest.fixture(scope="module")

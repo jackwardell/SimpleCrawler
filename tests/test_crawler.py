@@ -4,15 +4,15 @@ from flask import Flask
 from flask import redirect
 from flask import request
 
+from simple_crawler.crawler import Crawler
+from simple_crawler.crawler import NoThreadExecutor
+from simple_crawler.hyperlink import make_hyperlink
+from simple_crawler.hyperlink import make_hyperlink_set
+from simple_crawler.requester import ClientError
+from simple_crawler.requester import ServerError
+from simple_crawler.requester import WrongMIMEType
 from tests.conftest import make_html_from_links
 from tests.conftest import WebServer
-from web_crawler.crawler import Crawler
-from web_crawler.crawler import NoThreadExecutor
-from web_crawler.hyperlink import make_hyperlink
-from web_crawler.hyperlink import make_hyperlink_set
-from web_crawler.requester import ClientError
-from web_crawler.requester import ServerError
-from web_crawler.requester import WrongMIMEType
 
 
 def some_func(*args, **kwargs):

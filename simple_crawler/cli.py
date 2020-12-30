@@ -3,8 +3,8 @@ cli application for crawler
 """
 import click
 
-from web_crawler.crawler import Crawler
-from web_crawler.crawler import DEFAULT_USER_AGENT
+from simple_crawler.crawler import Crawler
+from simple_crawler.crawler import DEFAULT_USER_AGENT
 
 DEFAULT_MAX_WORKERS = 1
 DEFAULT_TIMEOUT = 10
