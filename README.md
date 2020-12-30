@@ -1,9 +1,7 @@
 # WebCrawler
-
 * This web crawler can be used to crawl a website from the command line or code
 
 # Install
-
 * Python required (3.6+) https://www.python.org/downloads/
 * `git clone https://github.com/jackwardell/WebCrawler.git`
 * `cd WebCrawler`
