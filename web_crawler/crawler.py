@@ -178,10 +178,15 @@ class Crawler:
                     if not robots.can_fetch(self.user_agent, str(url)):
                         continue
 
-                    # wait for delay if we can scrape but must crawl slowly
-                    if robots.crawl_delay(self.user_agent):
-                        delay = int(robots.crawl_delay(self.user_agent))
-                        time.sleep(delay)
+                    # there is a bug in py3.6 https://bugs.python.org/issue35922
+                    # this try, except will allow for 3.6
+                    try:
+                        # wait for delay if we can scrape but must crawl slowly
+                        if robots.crawl_delay(self.user_agent):
+                            delay = int(robots.crawl_delay(self.user_agent))
+                            time.sleep(delay)
+                    except AttributeError:
+                        pass
 
                 # submit crawl_url to executor
                 executor.submit(self._crawl_url, url)
