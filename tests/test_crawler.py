@@ -1,14 +1,12 @@
-import mimetypes
-
 import pytest
 from flask import abort
-from flask import jsonify
+from flask import Flask
 from flask import redirect
 from flask import request
 
 from tests.conftest import make_html_from_links
+from tests.conftest import WebServer
 from web_crawler.crawler import Crawler
-from web_crawler.crawler import DEFAULT_USER_AGENT
 from web_crawler.crawler import NoThreadExecutor
 from web_crawler.hyperlink import make_hyperlink
 from web_crawler.hyperlink import make_hyperlink_set
@@ -25,6 +23,11 @@ ARGS = (1, "two", 3.0)
 KWARGS = {"hello": "world", "example": True}
 
 
+def test_no_thread_executor():
+    with NoThreadExecutor() as executor:
+        assert some_func(*ARGS, **KWARGS) == executor.submit(some_func, *ARGS, **KWARGS)
+
+
 @pytest.fixture(scope="function")
 def crawler():
     crawler = Crawler(timeout=0)
@@ -34,12 +37,33 @@ def crawler():
     return crawler
 
 
-def test_no_thread_executor():
-    with NoThreadExecutor() as executor:
-        assert some_func(*ARGS, **KWARGS) == executor.submit(some_func, *ARGS, **KWARGS)
+@pytest.fixture(scope="module")
+def crawler_server():
+    """simple server to speed up tests that has all functionality required for most tests"""
+    app = Flask("crawler_server")
+    server = WebServer(app)
+    links = {
+        server.url + "/",
+        server.url + "/hello",
+        server.url + "/world",
+        server.url + "/mime/text/pdf",
+        server.url + "/mime/image/png",
+        server.url + "/mime/text/css",
+    }
+    dont_find_links = {
+        "https://subdomain.example.com/",
+        "https://www.example.com/",
+        server.url + "/hello",
+        "/world",
+        "/error/400",
+        "/error/500",
+    }
+    all_links = links | dont_find_links
 
+    @server.app.route("/")
+    def index():
+        return make_html_from_links(all_links)
 
-def test_crawler_simple_crawl(server, crawler):
     @server.app.route("/hello")
     def hello():
         return "<html><body><a href='/world'>world</a></body></html>"
@@ -48,26 +72,36 @@ def test_crawler_simple_crawl(server, crawler):
     def world():
         return "<html><body><a href='/hello'>hello</a></body></html>"
 
+    @server.app.route("/user-agent/<agent_name>")
+    def user_agent(agent_name):
+        return "" if request.headers["User-Agent"] == agent_name else abort(500)
+
+    @server.app.route("/redirect/<location>")
+    def redirect_to(location):
+        return redirect("/" + location)
+
+    @server.app.route("/error/<int:code>")
+    def error(code):
+        abort(code)
+
+    @server.app.route("/mime/<group>/<name>")
+    def mime_type(group, name):
+        return "", 200, {"Content-Type": f"{group}/{name}"}
+
     with server.run():
-        found_urls = crawler.crawl(server.url + "/hello")
-        assert found_urls == {server.url + "/hello", server.url + "/world"}
+        server.links = links
+        yield server
 
 
-def test_crawler_user_agent_success(server):
-    user_agent = "TestAgent"
+@pytest.mark.parametrize("user_agent", ["hello", "world", "TestAgent"])
+def test_crawler_user_agent_success(crawler_server, user_agent):
+    crawler = Crawler(user_agent=user_agent, timeout=0)
+    found_urls = crawler.crawl(crawler_server.url + f"/user-agent/{user_agent}")
+    assert found_urls == {crawler_server.url + f"/user-agent/{user_agent}"}
 
-    @server.app.route("/")
-    def index():
-        return "" if request.headers["User-Agent"] == user_agent else abort(404)
-
-    with server.run():
-        crawler = Crawler(user_agent=user_agent, timeout=0)
-        found_urls = crawler.crawl(server.url)
-        assert found_urls == {server.url + "/"}
-
-        crawler = Crawler(user_agent=f"Not{user_agent}", timeout=0)
-        found_urls = crawler.crawl(server.url)
-        assert found_urls == set()
+    crawler = Crawler(user_agent=f"Not{user_agent}", timeout=0)
+    found_urls = crawler.crawl(crawler_server.url + f"/user-agent/{user_agent}")
+    assert found_urls == set()
 
 
 @pytest.mark.parametrize("user_agent", ["hello", "world"])
@@ -113,41 +147,25 @@ def test_crawler_executor(crawler):
 
 
 @pytest.mark.parametrize(
-    "record_redirects, found_link", [(False, "/example"), (True, "{host}/world")]
+    "record_redirects, found_link", [(False, "/world"), (True, "{host}/hello")]
 )
-def test_crawler_get_hrefs(server, crawler, record_redirects, found_link):
-    @server.app.route("/hello")
-    def hello():
-        return redirect("/world")
-
-    @server.app.route("/world")
-    def world():
-        return "<html><body><a href='/example'></a></body></html>"
-
+def test_crawler_get_hrefs(crawler_server, crawler, record_redirects, found_link):
     crawler.record_redirects = record_redirects
+    found_link = found_link.format(host=crawler_server.url)
+    assert crawler._get_hrefs(crawler_server.href + "/redirect/hello") == make_hyperlink_set(
+        [found_link]
+    )
 
-    found_link = found_link.format(host=server.url)
 
-    with server.run():
-        assert crawler._get_hrefs(server.href + "/hello") == make_hyperlink_set([found_link])
+@pytest.mark.parametrize("code, exc", [("404", ClientError), ("500", ServerError)])
+def test_crawler_get_hrefs_fails_error(crawler_server, crawler, code, exc):
+    with pytest.raises(exc):
+        crawler._get_hrefs(crawler_server.href / "error" / code)
 
 
-@pytest.mark.parametrize(
-    "code, exc, func",
-    [
-        (404, ClientError, abort),
-        (500, ServerError, abort),
-        (200, WrongMIMEType, jsonify),
-    ],
-)
-def test_crawler_get_hrefs_fails(server, crawler, code, exc, func):
-    @server.app.route("/error")
-    def error():
-        return func(status=code)
-
-    with server.run():
-        with pytest.raises(exc):
-            crawler._get_hrefs(server.href / "error")
+def test_crawler_get_hrefs_fails_mime(crawler_server, crawler):
+    with pytest.raises(WrongMIMEType):
+        crawler._get_hrefs(crawler_server.href / "mime" / "image" / "png")
 
 
 def test_crawler_parse_hrefs(crawler):
@@ -178,31 +196,20 @@ def test_crawler_parse_hrefs(crawler):
     )
 
 
-def test_crawler_crawl_url(server, crawler):
-    @server.app.route("/hello")
-    def hello():
-        return "<html><body><a href='/world'>world</a></body></html>"
-
-    @server.app.route("/world")
-    def world():
-        return "<html><body><a href='/hello'>hello</a></body></html>"
-
-    with server.run():
-        crawler._crawl_url(server.href / "hello")
-        assert crawler._queue.get() == server.href / "world"
-        assert crawler._seen_urls == make_hyperlink_set([server.href / "world"])
-        assert crawler._done_urls == make_hyperlink_set([server.href / "hello"])
+def test_crawler_crawl_url(crawler_server, crawler):
+    crawler._crawl_url(crawler_server.href / "hello")
+    assert crawler._queue.get() == crawler_server.href / "world"
+    assert crawler._seen_urls == make_hyperlink_set([crawler_server.href / "world"])
+    assert crawler._done_urls == make_hyperlink_set([crawler_server.href / "hello"])
 
 
-@pytest.mark.parametrize(
-    "user_agent, allow, disallow, delay",
-    [
-        (DEFAULT_USER_AGENT, ["/this/"], ["/hello"], 10),
-        ("Tester", ["/this/", "/that/"], ["/hello", "/world"], 1),
-    ],
-)
-def test_crawler_get_robots(server, crawler, user_agent, allow, disallow, delay):
-    @server.app.route("/robots.txt")
+def test_crawler_get_robots(crawler_server, crawler):
+    user_agent = "Tester"
+    allow = ["/this/", "/that/"]
+    disallow = ["/hello", "/world"]
+    delay = 1
+
+    @crawler_server.app.route("/robots.txt")
     def robots_txt():
         allows = "\n".join([f"Allow: {a}" for a in allow])
         disallows = "\n".join([f"Disallow: {d}" for d in disallow])
@@ -217,113 +224,19 @@ def test_crawler_get_robots(server, crawler, user_agent, allow, disallow, delay)
         """
         return txt, 200, {"Content-Type": "text/plain; charset=utf-8"}
 
-    with server.run():
-        robots = crawler._get_robots(server.href / "robots.txt")
-        for a in allow:
-            assert robots.can_fetch(user_agent, a) is True
-        for d in disallow:
-            assert robots.can_fetch(user_agent, d) is False
-        assert robots.crawl_delay(user_agent) == delay
+    robots = crawler._get_robots(crawler_server.href / "robots.txt")
+    for a in allow:
+        assert robots.can_fetch(user_agent, a) is True
+    for d in disallow:
+        assert robots.can_fetch(user_agent, d) is False
+    assert robots.crawl_delay(user_agent) == delay
 
-        assert robots.can_fetch("NotAnyOtherAgent", "/") is False
-
-
-def test_crawler_crawl_find_all_links(server, crawler):
-    links = {"/", "/hello", "/world"}
-    server_links = {server.url + link for link in links}
-
-    @server.app.route("/")
-    def index():
-        return make_html_from_links(links)
-
-    @server.app.route("/hello")
-    def hello():
-        return make_html_from_links(links)
-
-    @server.app.route("/world")
-    def world():
-        return make_html_from_links(links)
-
-    with server.run():
-        found_links = crawler.crawl(server.url)
-        assert found_links == server_links
+    assert robots.can_fetch("NotAnyOtherAgent", "/") is False
 
 
-def test_crawler_crawl_nested_links(server, crawler):
-    links = {"/", "/hello", "/world"}
-    server_links = {server.url + link for link in links}
-
-    @server.app.route("/")
-    def index():
-        return make_html_from_links(["/hello"])
-
-    @server.app.route("/hello")
-    def hello():
-        return make_html_from_links(["/world"])
-
-    @server.app.route("/world")
-    def world():
-        return make_html_from_links(["/"])
-
-    with server.run():
-        found_links = crawler.crawl(server.url)
-        assert found_links == server_links
-
-
-def test_crawler_crawl_find_correct_links(server, crawler):
-    links = {
-        "https://subdomain.example.com/",
-        "https://www.example.com/",
-        server.url + "/hello",
-        "/world",
-        "/error/400",
-        "/error/500",
-    }
-
-    @server.app.route("/")
-    def index():
-        return make_html_from_links(links)
-
-    @server.app.route("/hello")
-    def hello():
-        return make_html_from_links(links)
-
-    @server.app.route("/world")
-    def world():
-        return make_html_from_links(links)
-
-    @server.app.route("/error/<int:code>")
-    def error(code):
-        abort(code)
-
-    with server.run():
-        found_links = crawler.crawl(server.url)
-        assert found_links == {
-            server.url + "/",
-            server.url + "/hello",
-            server.url + "/world",
-        }
-
-
-def test_crawler_crawl_find_mime_types(server, crawler):
-    links = {
-        "/a.css",
-        "/b.jpg",
-        "/c.pdf",
-        "/d.txt",
-    }
-
-    @server.app.route("/")
-    def index():
-        return make_html_from_links(links)
-
-    @server.app.route("/<file_and_extension>")
-    def file(file_and_extension):
-        return "", 200, {"Content-Type": mimetypes.guess_type(file_and_extension)[0]}
-
-    with server.run():
-        found_links = crawler.crawl(server.url)
-        assert found_links == {server.url + link for link in links} | {server.url + "/"}
+def test_crawler_crawl_find_all_links(crawler_server, crawler):
+    found_links = crawler.crawl(crawler_server.url)
+    assert found_links == crawler_server.links
 
 
 def test_crawler_render_results(crawler):
