@@ -1,7 +1,7 @@
 import pytest
 
 from web_crawler.hyperlink import make_hyperlink
-from web_crawler.hyperlink import make_hyperlink_collection
+from web_crawler.hyperlink import make_hyperlink_set
 
 
 @pytest.mark.parametrize(
@@ -142,45 +142,38 @@ def test_hyperlink_normalisation(input_link_and_output_result):
     assert make_hyperlink(input_link).url == output_result
 
 
-def test_hyperlink_collection_behaves_like_list():
-    hrefs = [
-        make_hyperlink("/hello"),
-        make_hyperlink("/world"),
-        make_hyperlink("/?hello=world"),
-    ]
+def test_hyperlink_set_behaves_like_set():
+    links = {"/hello", "/world", "/?hello=world"}
     # check __init__
-    links = make_hyperlink_collection(hrefs)
+    hrefs = make_hyperlink_set(links)
     # check __len__
-    assert len(links) == 3
+    assert len(hrefs) == 3
     # check append
-    links.append(make_hyperlink("/?hello=world&world=hello"))
+    hrefs.add(make_hyperlink("/?hello=world&world=hello"))
     # check __len__ again
-    assert len(links) == 4
-    # check __getitem__
-    assert links[0] == make_hyperlink("/hello")
-    assert links[3] == make_hyperlink("/?hello=world&world=hello")
+    assert len(hrefs) == 4
     # check __contains__
-    for href in hrefs:
-        assert href in links
+    for link in links:
+        assert make_hyperlink(link) in hrefs
     # check __iter__
-    for index, link in enumerate(links):
-        assert hrefs[index] == link
+    found = set()
+    for href in hrefs:
+        found.add(href)
+    assert found == hrefs.collection
 
 
-@pytest.mark.parametrize(
-    "input_and_output_links",
-    [
-        (["/"], ["/"]),
-        (["/", "/"], ["/"]),
-        (["/hello", "/hello", "/hello", "/world"], ["/hello", "/world"]),
-    ],
-)
-def test_hyperlink_collection_dedupe(input_and_output_links):
-    input_links, output_links = input_and_output_links
-    links = make_hyperlink_collection([make_hyperlink(link) for link in input_links])
-    assert links.dedupe() == make_hyperlink_collection(
-        [make_hyperlink(link) for link in output_links]
-    )
+# @pytest.mark.parametrize(
+#     "input_and_output_links",
+#     [
+#         (["/"], ["/"]),
+#         (["/", "/"], ["/"]),
+#         (["/hello", "/hello", "/hello", "/world"], ["/hello", "/world"]),
+#     ],
+# )
+# def test_hyperlink_set_dedupe(input_and_output_links):
+#     input_links, output_links = input_and_output_links
+#     links = make_hyperlink_set(input_links)
+#     assert links.dedupe() == make_hyperlink_set(output_links)
 
 
 @pytest.mark.parametrize(
@@ -191,13 +184,13 @@ def test_hyperlink_collection_dedupe(input_and_output_links):
         (["www.example.com"], ["/www.example.com"]),
     ],
 )
-def test_hyperlink_collection_relative_links_join_all(input_and_output):
+def test_hyperlink_set_relative_links_join_all(input_and_output):
     input_links, output_links = input_and_output
-    links = make_hyperlink_collection([make_hyperlink(link) for link in input_links])
+    links = make_hyperlink_set(input_links)
     domain = "https://www.google.com"
-    assert links.join_all(domain).collection == [
-        make_hyperlink(domain + link) for link in output_links
-    ]
+    assert links.join_all(domain) == make_hyperlink_set(
+        [make_hyperlink(domain + link) for link in output_links]
+    )
 
 
 @pytest.mark.parametrize(
@@ -211,11 +204,11 @@ def test_hyperlink_collection_relative_links_join_all(input_and_output):
         (["http://www.example.com"], ["http://www.example.com"]),
     ],
 )
-def test_hyperlink_collection_absolute_links_join_all(input_and_output):
+def test_hyperlink_set_absolute_links_join_all(input_and_output):
     input_links, output_links = input_and_output
-    links = make_hyperlink_collection([make_hyperlink(link) for link in input_links])
+    links = make_hyperlink_set(input_links)
     domain = "https://www.google.com"
-    assert links.join_all(domain).collection == [make_hyperlink(link) for link in output_links]
+    assert links.join_all(domain) == make_hyperlink_set(output_links)
 
 
 @pytest.mark.parametrize(
@@ -292,16 +285,14 @@ def test_hyperlink_collection_absolute_links_join_all(input_and_output):
         ),
     ],
 )
-def test_hyperlink_collection_filter_by(
-    fields_and_input_links_and_output_links,
-):
+def test_hyperlink_set_filter_by(fields_and_input_links_and_output_links):
     fields, input_links, output_links = fields_and_input_links_and_output_links
 
-    input_hrefs = make_hyperlink_collection([make_hyperlink(link) for link in input_links])
+    input_hrefs = make_hyperlink_set(input_links)
     k, v = fields
     filtered_hrefs = input_hrefs.filter_by(**{k: v})
 
-    output_hrefs = make_hyperlink_collection([make_hyperlink(link) for link in output_links])
+    output_hrefs = make_hyperlink_set(output_links)
 
     assert filtered_hrefs == output_hrefs
 
@@ -390,14 +381,14 @@ def test_hyperlink_collection_filter_by(
         ),
     ],
 )
-def test_hyperlink_collection_filter_by_mutli_kwargs(
+def test_hyperlink_set_filter_by_mutli_kwargs(
     fields_and_input_links_and_output_links,
 ):
     fields, input_links, output_links = fields_and_input_links_and_output_links
 
-    input_hrefs = make_hyperlink_collection([make_hyperlink(link) for link in input_links])
+    input_hrefs = make_hyperlink_set(input_links)
     filtered_hrefs = input_hrefs.filter_by(**fields)
 
-    output_hrefs = make_hyperlink_collection([make_hyperlink(link) for link in output_links])
+    output_hrefs = make_hyperlink_set(output_links)
 
     assert filtered_hrefs == output_hrefs

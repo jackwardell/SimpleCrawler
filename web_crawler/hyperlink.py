@@ -1,4 +1,5 @@
 import urllib.parse
+from typing import Iterable
 from typing import Union
 
 from web_crawler.url_normalisation import normalise_authority
@@ -52,10 +53,27 @@ class Hyperlink:
         scheme, authority, *_ = self.components
         return Hyperlink(urllib.parse.urlunsplit((scheme, authority, "", "", "")))
 
-    def without_fragment(self):
-        """remove fragment from href"""
-        scheme, authority, path, query, _ = self.components
-        return Hyperlink(urllib.parse.urlunsplit((scheme, authority, path, query, "")))
+    def trim(
+        self,
+        scheme: bool = False,
+        authority: bool = False,
+        path: bool = False,
+        query: bool = False,
+        fragment: bool = False,
+    ):
+        """trim one (or more) of the elements off a href"""
+        _scheme, _authority, _path, _query, _fragment = self.components
+        # empty elements if trimmed
+        url = urllib.parse.urlunsplit(
+            (
+                _scheme if not scheme else "",
+                _authority if not authority else "",
+                _path if not path else "",
+                _query if not query else "",
+                _fragment if not fragment else "",
+            )
+        )
+        return Hyperlink(url)
 
     def with_path(self, path):
         """join path to self as base url"""
@@ -72,6 +90,12 @@ class Hyperlink:
 
     def __hash__(self):
         return hash(repr(self))
+
+    def __add__(self, other):
+        return Hyperlink(self._input_url + str(other))
+
+    def __truediv__(self, other):
+        return Hyperlink(self._input_url + "/" + str(other))
 
     @property
     def is_absolute(self) -> bool:
@@ -94,39 +118,55 @@ class Hyperlink:
         resolution = urllib.parse.urljoin(base_url._input_url, self._input_url)
         return make_hyperlink(resolution)
 
-    @classmethod
-    def make(cls, link: str):
-        """
-        factory method for creating Hyperlinks
-
-        :param link: (str) any link/uri
-        :return: (Hyperlink) an instance of hyperlink
-        """
-        if isinstance(link, cls):
-            return link
-
-        if not isinstance(link, str):
-            raise TypeError("href links need to be strings")
-
-        return cls(link)
-
-
-make_hyperlink = Hyperlink.make
+    # @classmethod
+    # def make(cls, link: str):
+    #     """
+    #     factory method for creating Hyperlinks
+    #
+    #     :param link: (str) any link/uri
+    #     :return: (Hyperlink) an instance of hyperlink
+    #     """
+    #     if isinstance(link, cls):
+    #         return link
+    #
+    #     if not isinstance(link, str):
+    #         raise TypeError("href links need to be strings")
+    #
+    #     return cls(link)
 
 
-class HyperlinkCollection:
+# make_hyperlink = Hyperlink.make
+
+
+def make_hyperlink(link: Union[str, Hyperlink]) -> Hyperlink:
     """
-    a list for hyperlink references that allows for simple transformations
+    factory method for creating Hyperlinks
+
+    :param link: (str) any link/uri
+    :return: (Hyperlink) an instance of hyperlink
+    """
+    if isinstance(link, Hyperlink):
+        return link
+
+    if not isinstance(link, str):
+        raise TypeError("href links need to be strings")
+
+    return Hyperlink(link)
+
+
+class HyperlinkSet:
+    """
+    a set for hyperlink references that allows for simple transformations
     """
 
-    def __init__(self, collection: list = None):
-        self.collection = collection or []
+    def __init__(self, collection: set = None):
+        self.collection = collection or set()
 
     def __len__(self):
         return len(self.collection)
 
-    def __getitem__(self, item):
-        return self.collection[item]
+    # def __getitem__(self, item):
+    #     return self.collection[item]
 
     def __iter__(self):
         return iter(self.collection)
@@ -134,11 +174,11 @@ class HyperlinkCollection:
     def __contains__(self, item):
         return item in self.collection
 
-    def append(self, link):
+    def add(self, link):
         if not isinstance(link, Hyperlink):
             raise TypeError("link must be a Hyperlink")
 
-        self.collection.append(link)
+        self.collection.add(link)
 
     def __str__(self):
         return str(self.collection)
@@ -149,14 +189,20 @@ class HyperlinkCollection:
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.collection == other.collection
 
-    def dedupe(self):
-        """
-        remove all dupes and then create new instance of self
+    def is_empty(self):
+        return len(self.collection) == 0
 
-        :return: new instance of HyperlinkReferenceCollection that is deduped
-        """
-        # quickest way to dedupe while retaining order
-        return HyperlinkCollection(list(dict.fromkeys(self.collection)))
+    def is_not_empty(self):
+        return not self.is_empty()
+
+    # def dedupe(self):
+    #     """
+    #     remove all dupes and then create new instance of self
+    #
+    #     :return: new instance of HyperlinkReferenceCollection that is deduped
+    #     """
+    #     # quickest way to dedupe while retaining order
+    #     return HyperlinkSet(list(dict.fromkeys(self.collection)))
 
     def join_all(self, base_url: Union[str, Hyperlink]):
         """
@@ -168,7 +214,7 @@ class HyperlinkCollection:
         todo: base_url to Hyperlink
         """
         base_url = make_hyperlink(base_url)
-        return HyperlinkCollection([link.join(base_url) for link in self.collection])
+        return HyperlinkSet({link.join(base_url) for link in self.collection})
 
     def filter_by(self, **kwargs):
         """
@@ -180,35 +226,54 @@ class HyperlinkCollection:
         :return: new instance of HyperlinkReferenceCollection that has entries filtered
         """
         kwargs = normalise_kwargs(**kwargs)
-        results = []
+        results = set()
         for link in self.collection:
             if all([getattr(link, k) == v for k, v in kwargs.items()]):
-                results.append(link)
-        return HyperlinkCollection(results)
+                results.add(link)
+        return HyperlinkSet(results)
 
-    def without_fragments(self):
-        """apply without fragments to all hrefs"""
-        return HyperlinkCollection([href.without_fragment() for href in self.collection])
+    def trim(self, **kwargs):
+        return HyperlinkSet({href.trim(**kwargs) for href in self.collection})
 
-    @classmethod
-    def make(cls, links: list = None):
-        """
-        factory method for creating Hyperlinks
+    # @classmethod
+    # def make(cls, links: set = None):
+    #     """
+    #     factory method for creating Hyperlinks
+    #
+    #     :param links: (list) any list of link/uri
+    #     :return: (HyperlinkCollection) an instance of hyperlink collection
+    #     """
+    #     if links is None:
+    #         return cls()
+    #
+    #     if not isinstance(links, set):
+    #         raise TypeError("href links needs to be a list")
+    #
+    #     for link in links:
+    #         if not isinstance(link, Hyperlink):
+    #             raise TypeError("links must all be Hyperlink objects")
+    #
+    #     return cls(links)
 
-        :param links: (list) any list of link/uri
-        :return: (HyperlinkCollection) an instance of hyperlink collection
-        """
-        if links is None:
-            return cls()
 
-        if not isinstance(links, list):
-            raise TypeError("href links needs to be a list")
+def make_hyperlink_set(links: Iterable = None) -> HyperlinkSet:
+    """
+    factory method for creating Hyperlinks
 
-        for link in links:
-            if not isinstance(link, Hyperlink):
-                raise TypeError("links must all be Hyperlink objects")
+    :param links: (list) any list of link/uri
+    :return: (HyperlinkCollection) an instance of hyperlink collection
+    """
+    if links is None:
+        return HyperlinkSet()
 
-        return cls(links)
+    if not isinstance(links, Iterable):
+        raise TypeError("links must be iterable")
 
+    results = set()
+    for link in links:
+        if not isinstance(link, (Hyperlink, str)):
+            raise TypeError("links must all be Hyperlink objects")
+        else:
+            results.add(make_hyperlink(link))
 
-make_hyperlink_collection = HyperlinkCollection.make
+    return HyperlinkSet(results)
