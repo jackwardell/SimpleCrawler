@@ -15,8 +15,23 @@
 * `pytest`
 * `crawl https://www.example.com`
 
-# Use
+# Rules:
+This crawler will:
+* Only crawl text/html mime-types
+* Only crawl pages that return 200 OK HTTP statuses
+* Look at /robots.txt and obey by default (but can be overridden)
+* Add User-Agent, default value = PyWebCrawler (but can be changed)
+* Ignore ?query=strings and #fragments by default (but can be changed)
+* Get links from ONLY href value in <a href='/some-link'>click here</a> tags
 
+Todo:
+* Crawl client errors and server error pages? (Most websites have 404 & 500 handlers which may have links)
+* Parse more than just <a> tags and href attrs e.g. src='/some-link'
+* Add a scheduler / wait frequency (Politeness)
+* Request timeout
+
+
+# Use
 * just type `crawl <url>` into your command line e.g. `crawl https://www.google.com`
 
 ```
