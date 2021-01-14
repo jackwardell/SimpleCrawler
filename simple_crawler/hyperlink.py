@@ -22,8 +22,9 @@ class Hyperlink:
     __slots__ = "url", "_input_url"
 
     def __init__(self, link: str):
-        # split is the core element we want to build class around
+        # set input url as raw value
         self._input_url = link
+        # set url as normalised value
         self.url = normalise_url(link)
 
     @property
@@ -64,9 +65,10 @@ class Hyperlink:
         query: bool = False,
         fragment: bool = False,
     ):
-        """trim one (or more) of the elements off a href"""
+        """trim one (or more) of the components off a href"""
         _scheme, _authority, _path, _query, _fragment = self.components
-        # empty elements if trimmed
+        # if a component arg is True, e.g. scheme=True then we drop it from
+        # when we split self.components
         url = urllib.parse.urlunsplit(
             (
                 _scheme if not scheme else "",
@@ -78,7 +80,7 @@ class Hyperlink:
         )
         return Hyperlink(url)
 
-    def with_path(self, path):
+    def with_path(self, path: str):
         """join path to self as base url"""
         return Hyperlink(self.domain.url + path)
 
@@ -86,7 +88,7 @@ class Hyperlink:
         return self.url
 
     def __repr__(self):
-        return f'HREF("{self.url}")'
+        return f"Hyperlink('{self.url}')"
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.url == other.url
@@ -119,7 +121,7 @@ class Hyperlink:
         """
         base_url = make_hyperlink(base_url)
         resolution = urllib.parse.urljoin(base_url._input_url, self._input_url)
-        return make_hyperlink(resolution)
+        return Hyperlink(resolution)
 
 
 def make_hyperlink(link: Union[str, Hyperlink]) -> Hyperlink:
@@ -170,10 +172,12 @@ class HyperlinkSet:
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.collection == other.collection
 
-    def is_empty(self):
+    def is_empty(self) -> bool:
+        """check if set is empty"""
         return len(self.collection) == 0
 
-    def is_not_empty(self):
+    def is_not_empty(self) -> bool:
+        """check if set is not empty"""
         return not self.is_empty()
 
     def join_all(self, base_url: Union[str, Hyperlink]):
@@ -205,12 +209,18 @@ class HyperlinkSet:
         return HyperlinkSet(results)
 
     def trim(self, **kwargs):
+        """
+        apply the trim method to elements in the set
+
+        :param kwargs: any of: scheme, authority, path, query, fragment = True or False
+        :return: new instance of HyperlinkReferenceCollection that has entries trimmed
+        """
         return HyperlinkSet({href.trim(**kwargs) for href in self.collection})
 
 
 def make_hyperlink_set(links: Iterable = None) -> HyperlinkSet:
     """
-    factory method for creating Hyperlinks
+    factory method for creating Hyperlink sets
 
     :param links: (list) any list of link/uri
     :return: (HyperlinkCollection) an instance of hyperlink collection

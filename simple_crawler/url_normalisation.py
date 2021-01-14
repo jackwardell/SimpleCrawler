@@ -162,6 +162,10 @@ def normalise_query(query: str, sort_params: bool = True) -> str:
     'greeting=hi+there'
     >>> normalise_query('z=y&a=b&l=m&k=j')
     'a=b&k=j&l=m&z=y'
+    >>> normalise_query('z=y&a=b&l=m&k=j', sort_params=True)
+    'a=b&k=j&l=m&z=y'
+    >>> normalise_query('z=y&a=b&l=m&k=j', sort_params=False)
+    'z=y&a=b&l=m&k=j'
     >>> normalise_query('z=y&a=b&l=m&k=j', sort_params=False)
     'z=y&a=b&l=m&k=j'
     """

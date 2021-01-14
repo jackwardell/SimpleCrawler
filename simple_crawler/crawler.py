@@ -3,6 +3,7 @@ module for core software for crawling
 """
 import queue
 import time
+from concurrent.futures import Executor
 from concurrent.futures import ThreadPoolExecutor
 from typing import Set
 from typing import Union
@@ -20,17 +21,11 @@ from simple_crawler.requester import Requester
 from simple_crawler.requester import ServerError
 from simple_crawler.requester import WrongMIMEType
 
-DEFAULT_USER_AGENT = "PyWebCrawler"
+DEFAULT_USER_AGENT = "PySimpleCrawler"
 
 
-class NoThreadExecutor:
+class NoThreadExecutor(Executor):
     """an executor that won't fire off any threads (used for when workers=1)"""
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
 
     def submit(self, fn, *args, **kwargs):
         return fn(*args, **kwargs)
@@ -47,14 +42,16 @@ class Crawler:
     It's that simple
 
     :param user_agent: (str) name of the user agent, defaults to PyWebCrawler
-    :param session: (requests.Session) a session object in case user want their
-                    own with their own headers for instance
+    :param session: (requests.Session) option to add a requests.Session, useful
+                    if you need to add headers
     :param max_workers: (int) number of threads to spin up, when default as 1,
                         there is NO threading
     :param timeout: (int) length of time to wait for another url to be sent to
-                    the queue
+                    the queue before timing out and shutting down
     :param obey_robots: (bool) should crawler obey robots.txt
-    :param check_head: (bool) should crawler check HEAD before GET
+    :param check_head: (bool) should crawler check HEAD before GET, useful if
+                       there are lots of endpoints with large responses that
+                       don't need to be crawled e.g. pdf, .png, etc
     :param trim_query: (bool) should crawler remove ?query=strings from url
     :param trim_fragment: (bool) should crawler remove #fragments from url
     """
@@ -120,8 +117,13 @@ class Crawler:
             follow_redirects=(not self.record_redirects),
         )
 
+        # if we want to record redirects
+        # and the response returns a redirect
+        # then we will grab the the "Location" header from the response
+        # because there will be no links to scrape from the text
         if self.record_redirects and str(resp.status_code).startswith("3"):
             hrefs = make_hyperlink_set([make_hyperlink(resp.headers["Location"])])
+        # else we scrape from the text
         else:
             hrefs = get_hrefs_from_html(resp.text)
 
@@ -130,8 +132,11 @@ class Crawler:
     def _parse_hrefs(self, hrefs: HyperlinkSet, url: Hyperlink) -> HyperlinkSet:
         """parse the hrefs from collection and by trimming, joining, filtering and deduping"""
         hrefs = (
+            # remove the query part and the fragment part
             hrefs.trim(query=self.trim_query, fragment=self.trim_fragment)
+            # join all relative urls to the base url
             .join_all(url)
+            # then find all urls that match the base url
             .filter_by(authority=url.authority)
         )
 
@@ -140,31 +145,45 @@ class Crawler:
     def _crawl_url(self, url: Hyperlink) -> None:
         """crawl any url for all the other urls (in <a hrefs=url> tags)"""
         print(f"CRAWLING: {url}")
+        # try get 200 responses
         try:
+            # get all links on page
             hrefs = self._get_hrefs(url)
             print(f"VISITED: {url}")
+            # go through all the links found and print them to console
             for href in hrefs:
                 print(f"FOUND: {href} ON {url}")
 
+            # get all unique links from page that match the domain
             hrefs = self._parse_hrefs(hrefs, url)
+            # go through all links and add to queue and seen_urls if not in seen_urls
             for href in hrefs:
                 if href not in self._seen_urls:
                     self._queue.put(href)
                     self._seen_urls.add(href)
 
+            # set url as done
             self._done_urls.add(url)
 
+        # except 4xx or 5xx
         except (ClientError, ServerError) as exc:
+            # NB: we don't set as done here as we don't record responses that
+            #     returned 4xx or 5xx status codes
+            # todo: as this does not add to done_urls, we will have to wait
+            #  for timeout
             print(f"ERROR: {exc} ON {url}")
 
+        # or wrong mime type
         except WrongMIMEType:
             print(f"VISITED: {url}")
+            # add to done_urls as it is fair to report .pdf, etc files to found urls
             self._done_urls.add(url)
 
     def _get_robots(self, domain: Hyperlink) -> RobotFileParser:
         """get the robots.txt from any domain"""
         robots_url = domain.with_path("robots.txt")
         robots = RobotFileParser(str(robots_url))
+        # try and get /robots.txt and parse except error we assume none
         try:
             resp = self._requester(robots_url, mime_types=("text/plain",))
             robots.parse(resp.text.splitlines())
@@ -179,6 +198,8 @@ class Crawler:
         domain = make_hyperlink(domain)
         self._queue.put(domain)
 
+        # get robots
+        # todo: only do this if we obey robots?
         robots = self._get_robots(domain)
 
         with self._executor() as executor:
@@ -223,6 +244,7 @@ class Crawler:
     def _render_results(self) -> Set[str]:
         """render all urls as a set of strings and reset crawler"""
         results = {str(url) for url in self._done_urls}
+        # reset to start point
         self._queue = queue.Queue()
         self._seen_urls = make_hyperlink_set()
         self._done_urls = make_hyperlink_set()
