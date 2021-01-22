@@ -17,7 +17,7 @@ setup(
     author="jackwardell",
     author_email="jack@wardell.xyz",
     url="https://github.com/jackwardell",
-    description="Enter something here",
+    description="Very simple crawler that will print all URLs found on the same domain to the command line",
     long_description=long_description,
     long_description_content_type="text/markdown",
     test_suite="tests",
