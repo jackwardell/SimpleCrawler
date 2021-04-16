@@ -1,4 +1,7 @@
 # SimpleCrawler
+([![CircleCI](https://circleci.com/gh/drkostas/SimpleCrawler/tree/master.svg?style=svg)]
+(https://circleci.com/gh/drkostas/SimpleCrawler/tree/master))
+
 * This web crawler can be used to crawl a website from the command line or code
 
 # Install
@@ -15,7 +18,8 @@ OR
 * `pip install -r requirements.txt`
 * `pip install -e .`
 * `pytest`
-* `crawl https://www.example.com` or `python simple_crawler/cli.py https://www.example.com`
+* Edit `confs/conf.yml` and your MySQL credentials. You can use env variables too.
+* `crawl -c confs/conf.yml https://www.example.com` or `python -c confs/conf.yml simple_crawler/cli.py https://www.example.com`
 
 # Rules:
 This crawler will:

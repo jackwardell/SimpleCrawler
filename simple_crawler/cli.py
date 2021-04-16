@@ -5,6 +5,7 @@ import click
 
 from simple_crawler.crawler import Crawler
 from simple_crawler.crawler import DEFAULT_USER_AGENT
+from simple_crawler import Configuration
 
 DEFAULT_MAX_WORKERS = 1
 DEFAULT_TIMEOUT = 10
@@ -16,6 +17,7 @@ DEFAULT_WITH_FRAGMENT = False
 
 @click.command()
 @click.argument("url")
+@click.option("-c", "--config")
 @click.option("-u", "--user-agent", default=DEFAULT_USER_AGENT)
 @click.option("-w", "--max-workers", default=DEFAULT_MAX_WORKERS)
 @click.option("-t", "--timeout", default=DEFAULT_TIMEOUT)
@@ -26,6 +28,7 @@ DEFAULT_WITH_FRAGMENT = False
 @click.option("--debug/--no-debug", default=False)
 def crawl(
     url,
+    config,
     user_agent,
     max_workers,
     timeout,
@@ -35,6 +38,7 @@ def crawl(
     with_fragment,
     debug,
 ):
+    config = Configuration(config_src=config)
     click.echo(f"crawling URL: {url}")
     crawler = Crawler(
         user_agent=user_agent,
@@ -44,6 +48,7 @@ def crawl(
         obey_robots=(not disobey_robots),
         trim_query=(not with_query),
         trim_fragment=(not with_fragment),
+        db_config=config,
     )
 
     if debug is False:

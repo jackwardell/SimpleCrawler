@@ -6,7 +6,7 @@ import time
 from concurrent.futures import Executor
 from concurrent.futures import ThreadPoolExecutor
 from typing import Set
-from typing import Union
+from typing import Union, Dict
 from urllib.robotparser import RobotFileParser
 
 from requests import Session
@@ -20,6 +20,9 @@ from simple_crawler.requester import ClientError
 from simple_crawler.requester import Requester
 from simple_crawler.requester import ServerError
 from simple_crawler.requester import WrongMIMEType
+from simple_crawler.configuration import Configuration
+from simple_crawler.datastore import MySqlDatastore
+
 
 DEFAULT_USER_AGENT = "PySimpleCrawler"
 
@@ -66,6 +69,7 @@ class Crawler:
         check_head: bool = False,
         trim_query: bool = True,
         trim_fragment: bool = True,
+        db_config: Configuration = None,
     ):
         # config elements
         self.user_agent = user_agent
@@ -86,6 +90,8 @@ class Crawler:
         self.record_redirects = False
         # self.record_client_errors = False
         # self.record_server_errors = False
+
+        self.db = MySqlDatastore(db_config.get_datastores()[0])
 
     @property
     def config(self) -> dict:
