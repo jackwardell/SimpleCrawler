@@ -15,7 +15,7 @@ OR
 * `pip install -r requirements.txt`
 * `pip install -e .`
 * `pytest`
-* `crawl https://www.example.com`
+* `crawl https://www.example.com` or `python simple_crawler/cli.py https://www.example.com`
 
 # Rules:
 This crawler will:

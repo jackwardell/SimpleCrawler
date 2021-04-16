@@ -57,3 +57,7 @@ def crawl(
         # if debug we print config to console
         for k, v in crawler.config.items():
             click.echo(f"{k.replace('_', ' ')}: {v}")
+
+
+if __name__ == '__main__':
+    crawl()
