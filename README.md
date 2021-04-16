@@ -1,6 +1,5 @@
 # SimpleCrawler
-([![CircleCI](https://circleci.com/gh/drkostas/SimpleCrawler/tree/master.svg?style=svg)]
-(https://circleci.com/gh/drkostas/SimpleCrawler/tree/master))
+[![CircleCI](https://circleci.com/gh/drkostas/SimpleCrawler/tree/master.svg?style=svg)](https://circleci.com/gh/drkostas/SimpleCrawler/tree/master)
 
 * This web crawler can be used to crawl a website from the command line or code
 
