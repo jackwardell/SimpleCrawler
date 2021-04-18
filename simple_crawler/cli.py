@@ -17,7 +17,7 @@ DEFAULT_WITH_FRAGMENT = False
 
 @click.command()
 @click.argument("url")
-@click.option("-c", "--config")
+@click.option("-c", "--config", default=None)
 @click.option("-u", "--user-agent", default=DEFAULT_USER_AGENT)
 @click.option("-w", "--max-workers", default=DEFAULT_MAX_WORKERS)
 @click.option("-t", "--timeout", default=DEFAULT_TIMEOUT)
@@ -38,7 +38,8 @@ def crawl(
     with_fragment,
     debug,
 ):
-    config = Configuration(config_src=config)
+    if config:
+        config = Configuration(config_src=config)
     click.echo(f"crawling URL: {url}")
     crawler = Crawler(
         user_agent=user_agent,

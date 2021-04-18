@@ -91,7 +91,10 @@ class Crawler:
         # self.record_client_errors = False
         # self.record_server_errors = False
 
-        self.db = MySqlDatastore(db_config.get_datastores()[0])
+        if db_config:
+            self.db = MySqlDatastore(db_config.get_datastores()[0])
+        else:
+            self.db = None
 
     @property
     def config(self) -> dict:
@@ -151,14 +154,23 @@ class Crawler:
     def _crawl_url(self, url: Hyperlink) -> None:
         """crawl any url for all the other urls (in <a hrefs=url> tags)"""
         print(f"CRAWLING: {url}")
+        # if self.db:
+        #     data = {"action": "crawling", "url": f"{url}"}
+        #     self.db.insert_into_table(table="tmp_crawler", data=data)
         # try get 200 responses
         try:
             # get all links on page
             hrefs = self._get_hrefs(url)
             print(f"VISITED: {url}")
+            # if self.db:
+            #     data = {"action": "visited", "url": f"{url}"}
+            #     self.db.insert_into_table(table="tmp_crawler", data=data)
             # go through all the links found and print them to console
             for href in hrefs:
                 print(f"FOUND: {href} ON {url}")
+                # if self.db:
+                #     data = {"action": "found", "url": f"{url}"}
+                #     self.db.insert_into_table(table="tmp_crawler", data=data)
 
             # get all unique links from page that match the domain
             hrefs = self._parse_hrefs(hrefs, url)
@@ -182,6 +194,9 @@ class Crawler:
         # or wrong mime type
         except WrongMIMEType:
             print(f"VISITED: {url}")
+            # if self.db:
+            #     data = {"action": "visited", "url": f"{url}"}
+            #     self.db.insert_into_table(table="tmp_crawler", data=data)
             # add to done_urls as it is fair to report .pdf, etc files to found urls
             self._done_urls.add(url)
 
