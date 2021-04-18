@@ -9,8 +9,7 @@ jobs: # A basic unit of work in a run
     steps: # steps that comprise the `build` job
       - checkout # check out source code to working directory
       - run: python3 -m venv venv
-      - run: source venv/bin/activate
-      - run: pip install --upgrade pip
-      - run: pip install -r requirements.txt
-      - run: pip install -e .
-      - run: pytest
+      - run: venv/bin/pip install --upgrade pip
+      - run: venv/bin/pip install -r requirements.txt
+      - run: venv/bin/pip install -e .
+      - run: venv/bin/pytest
